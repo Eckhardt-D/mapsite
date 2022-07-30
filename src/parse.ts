@@ -56,17 +56,34 @@ export class SitemapParser {
 		return this.#currentDepth;
 	}
 
-	async #parsePossibleXMLText(text: string): Promise<MapSiteResponse> {
+	#getURLsFromLines(lines: string[]): string[] {
+		const result = [];
 		const locMatcher = /<(.*:)?loc>(.*)<\/(.*:)?loc>/g;
+
+		lines.forEach(line => {
+			const matched = line.matchAll(locMatcher);
+			const array = [...matched];
+
+			if (!array.length) return;
+
+			const url = array[0][2];
+
+			if (url) {
+				result.push(url);
+			}
+		});
+
+		return result;
+	}
+
+	async #parsePossibleXMLText(text: string, response: MapSiteResponse = {
+		type: 'sitemap',
+		urls: [] as string[],
+		errors: [] as string[],
+	}): Promise<MapSiteResponse> {
 		const sitemapMatcher = /<(.*:)?sitemap>/gm;
 		const isIndexFile = !!text.match(sitemapMatcher);
-
-
-		const response: MapSiteResponse = {
-			type: 'sitemap',
-			urls: [] as string[],
-			errors: [] as string[],
-		};
+		response.type = isIndexFile ? 'index' : 'sitemap';
 
 		if (text.length < 1) {
 			return response;
@@ -83,32 +100,32 @@ export class SitemapParser {
 			.replace(/<\/(.*:)?sitemap>/g, '</sitemap>\n')
 			.split('\n');
 
-		for (const line of lines) {
-			const extraction = line.matchAll(locMatcher);
-			const arr = [...extraction];
+		const urls = this.#getURLsFromLines(lines);
 
-			if (arr.length > 0) {
-				const location = arr[0][2];
-
-				if (location) {
-					if (isIndexFile) {
-						if (this.#currentDepth < this.maximumDepth) {
-							this.#currentDepth += 1;
-							const text = await this.#fetcher.fetch(location);
-							return this.#parsePossibleXMLText(text);
-						} else {
-							response.errors.push('Error');
-							response.type = 'index';
-							return response;
-						}
-					}
-					const encoded = encodeURI(location);
-					response.urls.push(encoded);
-				}
+		if (isIndexFile) {
+			if (this.#currentDepth >= this.maximumDepth) {
+				response.errors.push('Maximum recursive depth reached, more sites available.');
+				return response;
 			}
+
+			this.#currentDepth += 1;
+			const promises = urls.map(
+				url => this.#fetcher.fetch(url)
+					.then(txt => this.#parsePossibleXMLText(txt, response))
+					.catch(error => {
+						response.errors.push(error.message);
+						return response;
+					})
+			);
+
+			await Promise.all(promises);
+			return response;
 		}
 
-		return response;
+		return urls.reduce<MapSiteResponse>((previous, current) => {
+			previous.urls.push(current);
+			return previous;
+		}, response);
 	}
 
 	async run(url: string): Promise<MapSiteResponse> {

@@ -10,7 +10,10 @@ describe('SitemapParser', () => {
 });
 
 describe('SitemapParser.run', () => {
-	const parser = new SitemapParser({maximumDepth: 1});
+	const parser = new SitemapParser({
+		maximumDepth: 1,
+		rejectInvalidContentType: false
+	});
 
 	let xmlFileServer;
 	let xmlIndexServer;
@@ -67,10 +70,16 @@ describe('SitemapParser.run', () => {
 			type: 'index',
 			urls: [],
 			errors: [
-				'Error'
+				'Maximum recursive depth reached, more sites available.'
 			]
 		});
 	});
+
+	it('parses all locations of a sitemap index file', async () => {
+		parser.maximumDepth = 10;
+		const response = await parser.run('https://test.stillio.com/lndbk_/supersitemap.xml');
+		expect(response.errors).toStrictEqual([]);
+	}, 15000);
 
 	it('does nothing if a sitemap is empty', async () => {
 		const response = await parser.run('http://localhost:4449');
