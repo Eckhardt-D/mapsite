@@ -92,6 +92,7 @@ export class SitemapFetcher {
 			headersTimeout: this.timeout,
 			bodyTimeout: this.timeout,
 			headers: this.#makeHeaders(),
+			maxRedirections: 2,
 		});
 
 		const response = await this.#fetchWithRetries(requestCallable);

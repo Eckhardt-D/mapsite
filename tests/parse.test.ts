@@ -79,6 +79,7 @@ describe('SitemapParser.run', () => {
 		parser.maximumDepth = 10;
 		const response = await parser.run('https://test.stillio.com/lndbk_/supersitemap.xml');
 		expect(response.errors).toStrictEqual([]);
+		expect(response.urls.length).toBe(290);
 	}, 15000);
 
 	it('does nothing if a sitemap is empty', async () => {
