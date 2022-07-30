@@ -102,7 +102,8 @@ export class SitemapParser {
 							return response;
 						}
 					}
-					response.urls.push(arr[0][2]);
+					const encoded = encodeURI(location);
+					response.urls.push(encoded);
 				}
 			}
 		}
