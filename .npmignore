@@ -1,0 +1,6 @@
+src/
+tests/
+.eslintrc.json
+.tsconfig.json
+.vitest.config.ts
+coverage/
