@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A module to parse urls from a local or remote sitemap.xml",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "test": "vitest run --config ./vitest.config.ts --coverage",
     "compile": "tsup src/index.ts --dts"
