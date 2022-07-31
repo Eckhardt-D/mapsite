@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns1:urlset xmlns:ns1="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>1</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.75</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/beyond-high-school
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/brothers-perspective
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/building-support-network
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/care-for-the-caregiver
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/diagnosis-to-management
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/finding-the-right-neurologist
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/finding-your-way-with-lgs
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/healthcare-appointments
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/legal-guardianship
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/patient-perspective
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/protecting-financial-future
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/role-as-parents
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/sharing-decision-making
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/support-for-siblings
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/seizure-to-lgs
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/how-the-brain-works
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/seizure-phases
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/finding-support
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/facts-about-lgs
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/doctor-communication
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/seizure-triggers
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/change-resulted-in-relief
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/conversation
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/siblings-parents
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/dont-give-up
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/managing-lgs-with-doctor
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/adding-onfi/
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/when-i-prescribe-onfi
+</ns1:loc>
+		<ns1:lastmod>2018-01-16</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+
+    <ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/my-life-purpose
+</ns1:loc>
+		<ns1:lastmod>2018-01-16</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/advice-for-the-newly-diagnosed
+</ns1:loc>
+		<ns1:lastmod>2018-01-16</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+
+    <ns1:url>
+		<ns1:loc>
+https://www.onfi.com/caregiver-corner/lessons-the-world-could-learn
+</ns1:loc>
+		<ns1:lastmod>2018-01-16</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.5</ns1:priority>
+	</ns1:url>
+
+    <ns1:url>
+		<ns1:loc>
+https://www.onfi.com/copay-card-free-trial
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.75</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/copay-or-free-trial/patient-assistance
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/lennox-gastaut-syndrome
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.8</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/lennox-gastaut-syndrome/glossary
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/managing-lgs
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.8</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/managing-lgs/childhood-to-adulthood
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/managing-lgs/prognosis
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/managing-lgs/seizure-management
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/managing-lgs/team-of-doctors
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/seizure-medication/about
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.8</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/seizure-medication/dosing
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/seizure-medication/reduction-efficacy
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/seizure-medication/safety-and-side-effects
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.6</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/site-map
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.3</ns1:priority>
+	</ns1:url>
+	<ns1:url>
+		<ns1:loc>
+https://www.onfi.com/search
+</ns1:loc>
+		<ns1:lastmod>2017-03-01</ns1:lastmod>
+		<ns1:changefreq>monthly</ns1:changefreq>
+		<ns1:priority>0.3</ns1:priority>
+	</ns1:url>
+</ns1:urlset>

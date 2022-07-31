@@ -1,2 +1,1 @@
-export * from './fetch';
-export * from './parse';
+export { SitemapParser } from "./parse";

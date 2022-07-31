@@ -1,6 +1,6 @@
 {
   "name": "mapsite",
-  "version": "0.3.3",
+  "version": "1.0.0",
   "description": "A module to parse urls from a local or remote sitemap.xml",
   "main": "dist/index.js",
   "scripts": {
@@ -29,8 +29,10 @@
     "eslint": "^8.20.0",
     "tsup": "^6.2.0",
     "typescript": "^4.7.4",
+    "vitest": "^0.19.1"
+  },
+  "dependencies": {
     "undici": "^5.8.0",
-    "vitest": "^0.19.1",
     "zod": "^3.17.10"
   }
 }

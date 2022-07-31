@@ -1,135 +1,204 @@
 import {
-	oneToTenSchema,
-	SitemapFetcher,
-	SitemapFetcherConstructorOptions
-} from '.';
+  oneToTenSchema,
+  SitemapFetcher,
+  SitemapFetcherConstructorOptions,
+} from "./fetch";
 
-import {z} from 'zod';
+import { z } from "zod";
 
 interface SitemapParserOptions {
   maximumDepth?: number;
 }
 
-const sitemapParserConstructorOptionsSchema = z.object({
-	maximumDepth: oneToTenSchema.optional(),
-	rejectInvalidContentType: z.boolean().optional(),
-	maximumRetries: oneToTenSchema.optional(),
-	timeout: z.number().optional(),
-	debug: z.boolean().optional(),
-})
-	.default({
-		maximumDepth: 2,
-		rejectInvalidContentType: true,
-		maximumRetries: 3,
-		timeout: 3000,
-		debug: false,
-	});
+interface MapSiteError {
+  url: string;
+  reason: string;
+}
 
+const sitemapParserConstructorOptionsSchema = z
+  .object({
+    maximumDepth: oneToTenSchema.optional(),
+    rejectInvalidContentType: z.boolean().optional(),
+    maximumRetries: oneToTenSchema.optional(),
+    timeout: z.number().optional(),
+    debug: z.boolean().optional(),
+  })
+  .default({
+    maximumDepth: 2,
+    rejectInvalidContentType: true,
+    maximumRetries: 3,
+    timeout: 3000,
+    debug: false,
+  });
 
-export type SitemapParserConstructorOptions =
-  SitemapFetcherConstructorOptions & SitemapParserOptions;
-
+export type SitemapParserConstructorOptions = SitemapFetcherConstructorOptions &
+  SitemapParserOptions;
 
 export interface MapSiteResponse {
-  type: 'sitemap' | 'index',
-  urls: string[],
-  errors: string[],
+  type: "sitemap" | "index";
+  urls: string[];
+  errors: MapSiteError[];
 }
 
 export class SitemapParser {
-	#fetcher: SitemapFetcher;
-	#currentDepth = 0;
-	maximumDepth: number;
+  #fetcher: SitemapFetcher;
+  #currentDepth = 0;
+  maximumDepth: number;
 
-	constructor(options?: SitemapParserConstructorOptions) {
-		const params = sitemapParserConstructorOptionsSchema
-			.parse(options)as SitemapParserConstructorOptions;
+  constructor(options?: SitemapParserConstructorOptions) {
+    const params = sitemapParserConstructorOptionsSchema.parse(
+      options
+    ) as SitemapParserConstructorOptions;
 
-		const { maximumDepth, ...rest } = params;
+    const { maximumDepth, ...rest } = params;
 
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		this.maximumDepth = maximumDepth!;
-		this.#fetcher = new SitemapFetcher(rest);
-	}
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this.maximumDepth = maximumDepth!; // Will be set by Zod
+    this.#fetcher = new SitemapFetcher(rest);
+  }
 
-	get currentDepth() {
-		return this.#currentDepth;
-	}
+  get currentDepth() {
+    return this.#currentDepth;
+  }
 
-	#getURLsFromLines(lines: string[]): string[] {
-		const result = [];
-		const locMatcher = /<(.*:)?loc>(.*)<\/(.*:)?loc>/g;
+  static getLinesFromText(text: string): string[] {
+    return (
+      text
+        // Delete all line breaks
+        .replace(/\n/g, "")
+        // Make sure <loc>url</loc> has its own line
+        .replace(/<([A-z0-9:]+)?loc>/g, "\n<loc>")
+        // Make sure <loc>url</loc> has its own line
+        .replace(/<\/([A-z0-9:]+)?loc>/g, "</loc>\n")
+        // Make sure <sitemap> has its own line
+        .replace(/<([A-z0-9:]+)?sitemap>/g, "\n<sitemap>")
+        // Make sure <sitemap> has its own line
+        .replace(/<\/([A-z0-9:]+)?sitemap>/g, "</sitemap>\n")
+        // Remove tabs
+        .replace(/\t+/g, "")
+        .split("\n")
+    );
+  }
 
-		lines.forEach(line => {
-			const matched = line.matchAll(locMatcher);
-			const array = [...matched];
+  #getTextFromBuffer(buffer: Buffer): string {
+    return buffer.toString("utf-8");
+  }
 
-			if (!array.length) return;
+  #getURLsFromLines(lines: string[]): string[] {
+    const result = [];
+    const locMatcher = /<(.*:)?loc>(.*)<\/(.*:)?loc>/g;
 
-			const url = array[0][2];
+    lines.forEach((line) => {
+      const matched = line.matchAll(locMatcher);
+      const array = [...matched];
 
-			if (url) {
-				result.push(url);
-			}
-		});
+      if (!array.length) return;
 
-		return result;
-	}
+      const url = array[0][2];
 
-	async #parsePossibleXMLText(text: string, response: MapSiteResponse = {
-		type: 'sitemap',
-		urls: [] as string[],
-		errors: [] as string[],
-	}): Promise<MapSiteResponse> {
-		const sitemapMatcher = /<(.*:)?sitemap>/gm;
-		const isIndexFile = !!text.match(sitemapMatcher);
-		response.type = isIndexFile ? 'index' : 'sitemap';
+      if (url) {
+        result.push(url);
+      }
+    });
 
-		if (text.length < 1) {
-			return response;
-		}
+    return result;
+  }
 
-		const lines = text
-			// Make sure <loc>url</loc> has its own line
-			.replace(/<(.*:)?loc>/g, '\n<loc>')
-			// Make sure <loc>url</loc> has its own line
-			.replace(/<\/(.*:)?loc>/g, '</loc>\n')
-			// Make sure <sitemap> has its own line
-			.replace(/<(.*:)?sitemap>/g, '<sitemap>\n')
-			// Make sure <sitemap> has its own line
-			.replace(/<\/(.*:)?sitemap>/g, '</sitemap>\n')
-			.split('\n');
+  async #parsePossibleXMLText(
+    url: string,
+    text: string,
+    response: MapSiteResponse = {
+      type: "sitemap",
+      urls: [] as string[],
+      errors: [] as MapSiteError[],
+    }
+  ): Promise<MapSiteResponse> {
+    try {
+      const sitemapMatcher = /<(.*:)?sitemap>/gm;
+      const isIndexFile = !!text.match(sitemapMatcher);
+      response.type = isIndexFile ? "index" : "sitemap";
 
-		const urls = this.#getURLsFromLines(lines);
+      if (text.length < 1) {
+        return response;
+      }
 
-		if (isIndexFile) {
-			if (this.#currentDepth >= this.maximumDepth) {
-				response.errors.push('Maximum recursive depth reached, more sites available.');
-				return response;
-			}
+      const lines = SitemapParser.getLinesFromText(text);
+      const urls = this.#getURLsFromLines(lines);
 
-			this.#currentDepth += 1;
-			const promises = urls.map(
-				url => this.#fetcher.fetch(url)
-					.then(txt => this.#parsePossibleXMLText(txt, response))
-					.catch(error => {
-						response.errors.push(error.message);
-						return response;
-					})
-			);
+      if (isIndexFile) {
+        if (this.#currentDepth >= this.maximumDepth) {
+          response.errors.push({
+            reason: "Maximum recursive depth reached, more sites available.",
+            url,
+          });
+          return response;
+        }
 
-			await Promise.all(promises);
-			return response;
-		}
+        this.#currentDepth += 1;
+        const promises = urls.map((loc) =>
+          this.#fetcher
+            .fetch(loc)
+            .then((txt) => this.#parsePossibleXMLText(loc, txt, response))
+            .catch((error) => {
+              response.errors.push({
+                reason: error.message,
+                url: loc,
+              });
+              return response;
+            })
+        );
 
-		return urls.reduce<MapSiteResponse>((previous, current) => {
-			previous.urls.push(current);
-			return previous;
-		}, response);
-	}
+        await Promise.all(promises);
+        return response;
+      }
 
-	async run(url: string): Promise<MapSiteResponse> {
-		const text = await this.#fetcher.fetch(url);
-		return this.#parsePossibleXMLText(text);
-	}
+      return urls.reduce<MapSiteResponse>((previous, current) => {
+        previous.urls.push(current);
+        return previous;
+      }, response);
+    } catch (error) {
+      response.errors.push({
+        url,
+        reason: error.message,
+      });
+
+      return response;
+    }
+  }
+
+  async run(url: string): Promise<MapSiteResponse> {
+    try {
+      const text = await this.#fetcher.fetch(url);
+      return this.#parsePossibleXMLText(url, text);
+    } catch (error) {
+      return {
+        type: "sitemap",
+        urls: [],
+        errors: [
+          {
+            url,
+            reason: error.message,
+          },
+        ],
+      };
+    }
+  }
+
+  async fromBuffer(buffer: Buffer): Promise<MapSiteResponse> {
+    try {
+      const text = this.#getTextFromBuffer(buffer);
+      return this.#parsePossibleXMLText("buffer", text);
+    } catch (error) {
+      return {
+        type: "sitemap",
+        urls: [],
+        errors: [
+          {
+            url: "buffer",
+            reason: error.message,
+          },
+        ],
+      };
+    }
+  }
 }
