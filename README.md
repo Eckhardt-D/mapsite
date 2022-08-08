@@ -1,26 +1,28 @@
 # Getting Started
 
-  ```bash
-  npm install mapsite
-  ```
-  or
+```bash
+npm install mapsite
+```
 
-  ```bash
-  yarn add mapsite
-  ```
+or
+
+```bash
+yarn add mapsite
+```
 
 # Usage
 
 ```js
-const { SitemapParser } = require('mapsite');
+const { SitemapParser } = require("mapsite");
 
 const options = {
   rejectInvalidContentType: true,
+  userAgent: "customUA",
   maximumRetries: 1,
   maximumDepth: 5,
   timeout: 3000,
-  debug: false
-}
+  debug: false,
+};
 
 const parser = new SitemapParser(options);
 ```
@@ -38,6 +40,14 @@ Checks that the response content-type header MUST be:
 - `text/xml`
 
 `default: true`
+
+---
+
+`userAgent`: string;
+
+Adds a custom `User-Agent` string to the requests.
+
+`default: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36 mapsite/1.0`
 
 ---
 
@@ -75,7 +85,7 @@ Logs info, warning and error messages as the parser runs (WIP).
 
 ```js
 const parser = new SitemapParser();
-const result = await parser.run('https://example.com/sitemap.xml')
+const result = await parser.run("https://example.com/sitemap.xml");
 ```
 
 `result`: MapsiteResponse;
@@ -84,23 +94,23 @@ The result shape looks as follows:
 
 ```js
 const result = {
-  type: 'sitemap',
-  urls: ['https://example.com'],
+  type: "sitemap",
+  urls: ["https://example.com"],
   errors: [
     {
-      url: 'https://example.com/sitemap-index.xml',
-      reason: 'Brief description of what went wrong'
-    }
-  ]
-}
+      url: "https://example.com/sitemap-index.xml",
+      reason: "Brief description of what went wrong",
+    },
+  ],
+};
 ```
 
 ### fromBuffer
 
 ```js
-const {readFileSync} = require('fs');
+const { readFileSync } = require("fs");
 const parser = new SitemapParser();
-const buffer = Buffer.from(readFileSync('./sitemap.xml')); // Or a buffer from an uploaded file
+const buffer = Buffer.from(readFileSync("./sitemap.xml")); // Or a buffer from an uploaded file
 const result = await parser.fromBuffer(buffer);
 ```
 
@@ -110,13 +120,13 @@ The result shape looks as follows:
 
 ```js
 const result = {
-  type: 'sitemap', // or 'index'
-  urls: ['https://example.com'],
+  type: "sitemap", // or 'index'
+  urls: ["https://example.com"],
   errors: [
     {
-      url: 'buffer',
-      reason: 'Brief description of what went wrong'
-    }
-  ]
-}
+      url: "buffer",
+      reason: "Brief description of what went wrong",
+    },
+  ],
+};
 ```
