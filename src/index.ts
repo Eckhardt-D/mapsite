@@ -1,1 +1,1 @@
-export { SitemapParser } from "./parse";
+export { SitemapParser } from './parse';

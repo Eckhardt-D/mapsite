@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SitemapFetcher } from '../src/fetch';
 
 import {
@@ -43,6 +43,7 @@ describe('SitemapFetcher.fetch', () => {
 		htmlServer.close();
 		xmlServer.close();
 		errServer.close();
+		vi.restoreAllMocks();
 	});
 
 	it('throws if failed to fetch', async () => {
@@ -80,5 +81,21 @@ describe('SitemapFetcher.fetch', () => {
 	it('returns the response content as a string', async () => {
 		const response = await fetcher.fetch('http://localhost:4445');
 		expect(typeof response).toBe('string');
+	});
+
+	it('accepts a custom user agent', async () => {
+		const fetcher2 = new SitemapFetcher({
+			userAgent: 'Custom'
+		});
+
+		await fetcher.fetch('http://localhost:4445');
+		expect(fetcher2._makeHeaders()['User-Agent']).toBe('Custom');
+	});
+
+	it('has a default user agent', async () => {
+		const fetcher2 = new SitemapFetcher();
+
+		await fetcher.fetch('http://localhost:4445');
+		expect(fetcher2._makeHeaders()['User-Agent']).toBe('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36 mapsite/1.0');
 	});
 });
