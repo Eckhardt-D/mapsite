@@ -1,13 +1,12 @@
 {
   "name": "mapsite",
-  "version": "1.2.1",
+  "version": "1.2.4",
   "description": "A module to parse urls from a local or remote sitemap.xml",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "test": "vitest run --config ./vitest.config.ts --coverage",
-    "compile": "tsup src/index.ts --dts",
-    "prepublish": "yarn compile"
+    "compile": "tsup src/index.ts --dts"
   },
   "repository": {
     "type": "git",
