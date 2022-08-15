@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="//public.com/wp-content/plugins/wordpress-seo/css/main-sitemap.xsl"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<url>
+		<loc>https://public.com/talks/investing-101-workshop</loc>
+		<lastmod>2021-05-14T11:36:19+00:00</lastmod>
+		<image:image>
+			<image:loc>https://public.com/wp-content/uploads/2020/05/Community-Roundtable-1.png</image:loc>
+			<image:title><![CDATA[Investing 101 Workshop]]></image:title>
+			<image:caption><![CDATA[Investing 101 Workshop]]></image:caption>
+		</image:image>
+	</url>
+  <url>
+		<loc>https://public.com/talks/investing-101-workshop</loc>
+		<lastmod>2021-05-14T11:36:19+00:00</lastmod>
+		<video:video>
+			<video:loc>https://public.com/wp-content/uploads/2020/05/Community-Roundtable-1.png</video:loc>
+			<video:title><![CDATA[Investing 101 Workshop]]></video:title>
+			<video:caption><![CDATA[Investing 101 Workshop]]></video:caption>
+		</video:video>
+	</url>
+</urlset>

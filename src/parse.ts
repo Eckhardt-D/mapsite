@@ -68,9 +68,9 @@ export class SitemapParser {
 			// Delete all line breaks
 				.replace(/\n/g, '')
 			// Make sure <loc>url</loc> has its own line
-				.replace(/<([A-z0-9:]+)?loc>/g, '\n<loc>')
+				.replace(/<((?!(image|video))[A-z0-9:]+)?loc>/g, '\n<loc>')
 			// Make sure <loc>url</loc> has its own line
-				.replace(/<\/([A-z0-9:]+)?loc>/g, '</loc>\n')
+				.replace(/<\/((?!(image|video))[A-z0-9:]+)?loc>/g, '</loc>\n')
 			// Make sure <sitemap> has its own line
 				.replace(/<([A-z0-9:]+)?sitemap>/g, '\n<sitemap>')
 			// Make sure <sitemap> has its own line
@@ -90,6 +90,10 @@ export class SitemapParser {
 		const locMatcher = /<(.*:)?loc>(.*)<\/(.*:)?loc>/g;
 
 		lines.forEach((line) => {
+			/**
+			 * Do not includes google's media tags in the response
+			 */
+			if (line.includes('image:image') || line.includes('video:video')) return;
 			const matched = line.matchAll(locMatcher);
 			const array = [...matched];
 

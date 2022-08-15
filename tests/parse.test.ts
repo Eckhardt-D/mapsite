@@ -6,6 +6,7 @@ import {
 	createSitemapIndexServer,
 	createEmptySitemapServer,
 	createNamespacedServer,
+	createMediaServer
 } from './server';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -45,12 +46,14 @@ describe('SitemapParser.run', () => {
 	let xmlIndexServer;
 	let emptyXmlServer;
 	let namespacedServer;
+	let mediaServer;
 
 	beforeEach(() => {
 		xmlFileServer = createSitemapServer(); // 4448
 		xmlIndexServer = createSitemapIndexServer(); // 4447
 		emptyXmlServer = createEmptySitemapServer(); // 4449
 		namespacedServer = createNamespacedServer(); // 4450
+		mediaServer = createMediaServer(); // 4451
 	});
 
 	afterEach(() => {
@@ -58,6 +61,7 @@ describe('SitemapParser.run', () => {
 		xmlIndexServer.close();
 		emptyXmlServer.close();
 		namespacedServer.close();
+		mediaServer.close();
 		vi.restoreAllMocks();
 	});
 
@@ -183,6 +187,13 @@ describe('SitemapParser.run', () => {
 				},
 			],
 		});
+	});
+
+	it('does not parse media-related sitemap tags', async () => {
+		parser.maximumDepth = 2;
+		const response = await parser.run('http://localhost:4451');
+		expect(response.urls).not.includes('https://public.com/wp-content/uploads/2020/05/Community-Roundtable-1.png');
+		expect(response.urls).includes('https://public.com/talks/investing-101-workshop');
 	});
 
 	it('parses all locations of a sitemap index file', async () => {

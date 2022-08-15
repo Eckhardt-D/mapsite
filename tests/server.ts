@@ -49,3 +49,10 @@ export const createNamespacedServer = () =>
 		response.setHeader('Content-Type', 'application/xml');
 		response.end(sitemapFile);
 	}).listen(4450);
+
+export const createMediaServer = () =>
+	createServer((_, response) => {
+		const sitemapFile = readFileSync(join(__dirname, './files/media.xml'));
+		response.setHeader('Content-Type', 'application/xml');
+		response.end(sitemapFile);
+	}).listen(4451);
