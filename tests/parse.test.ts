@@ -6,7 +6,7 @@ import {
 	createSitemapIndexServer,
 	createEmptySitemapServer,
 	createNamespacedServer,
-	createMediaServer
+	createMediaServer,
 } from './server';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -39,7 +39,7 @@ describe('SitemapParser.run', () => {
 	const parser = new SitemapParser({
 		maximumDepth: 1,
 		rejectInvalidContentType: false,
-		userAgent: 'Custom'
+		userAgent: 'Custom',
 	});
 
 	let xmlFileServer;
@@ -192,8 +192,12 @@ describe('SitemapParser.run', () => {
 	it('does not parse media-related sitemap tags', async () => {
 		parser.maximumDepth = 2;
 		const response = await parser.run('http://localhost:4451');
-		expect(response.urls).not.includes('https://public.com/wp-content/uploads/2020/05/Community-Roundtable-1.png');
-		expect(response.urls).includes('https://public.com/talks/investing-101-workshop');
+		expect(response.urls).not.includes(
+			'https://public.com/wp-content/uploads/2020/05/Community-Roundtable-1.png'
+		);
+		expect(response.urls).includes(
+			'https://public.com/talks/investing-101-workshop'
+		);
 	});
 
 	it('parses all locations of a sitemap index file', async () => {
@@ -202,7 +206,7 @@ describe('SitemapParser.run', () => {
 			'https://test.stillio.com/lndbk_/supersitemap.xml'
 		);
 		expect(response.errors).toStrictEqual([]);
-		expect(response.urls.length).toBe(338);
+		expect(response.urls.length).toBe(358);
 	}, 15000);
 
 	it('does nothing if a sitemap is empty', async () => {

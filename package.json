@@ -1,6 +1,6 @@
 {
   "name": "mapsite",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "A module to parse urls from a local or remote sitemap.xml",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

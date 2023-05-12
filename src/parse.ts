@@ -89,22 +89,26 @@ export class SitemapParser {
 		const result = [];
 		const locMatcher = /<(.*:)?loc>(.*)<\/(.*:)?loc>/g;
 
-		lines.forEach((line) => {
+		for (let i = 0; i < lines.length; i++) {
+			let line = lines[i];
+
+			if (!line.includes('loc>')) continue;
+			line = line.trim().replace(/\s+/g, '');
 			/**
 			 * Do not includes google's media tags in the response
 			 */
-			if (line.includes('image:image') || line.includes('video:video')) return;
+			if (line.includes('image:image') || line.includes('video:video')) continue;
 			const matched = line.matchAll(locMatcher);
 			const array = [...matched];
 
-			if (!array.length) return;
+			if (!array.length) continue;
 
 			const url = array[0][2];
 
 			if (url) {
 				result.push(url);
 			}
-		});
+		}
 
 		return result;
 	}
