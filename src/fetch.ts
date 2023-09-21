@@ -4,7 +4,7 @@ import { Dispatcher, request } from 'undici';
 
 type OneToTen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
-type StrictContentType = 'text/xml' | 'application/xml' | 'application/rss+xml' | 'application/gzip';
+type StrictContentType = 'text/xml' | 'application/xml' | 'application/rss+xml' | 'application/gzip' | 'application/zip';
 
 export interface SitemapFetcherConstructorOptions {
   rejectInvalidContentType?: boolean;
@@ -18,7 +18,8 @@ const allowedContentTypesWhenStrict: StrictContentType[] = [
 	'text/xml',
 	'application/xml',
 	'application/rss+xml',
-  'application/gzip'
+	'application/gzip',
+	'application/zip'
 ];
 
 export const oneToTenSchema = z.number().int().min(1).max(10);
@@ -132,11 +133,18 @@ export class SitemapFetcher {
 				);
 			}
 		}
+    
+		/**
+      * Technically /zip is not valid, but some sites use it
+      *  when sending gzipped content.
+      */
+		const isZipped = ['application/zip', 'application/gzip']
+			.some(format => contentTypeHeaders.includes(format));
 
-    if (contentTypeHeaders.includes('application/gzip')) {
-      const unzipped = await ungzip(await response.body.arrayBuffer());
-      return unzipped.toString();
-    }
+		if (isZipped) {
+			const unzipped = await ungzip(await response.body.arrayBuffer());
+			return unzipped.toString();
+		}
 
 		return response.body.text();
 	}
