@@ -5,6 +5,7 @@ import {
 	createErrorServer,
 	createHtmlServer,
 	createXmlServer,
+	createGzippedServer,
 } from './server';
 
 describe('SitemapFetcher.constructor', () => {
@@ -32,17 +33,20 @@ describe('SitemapFetcher.fetch', () => {
 	let htmlServer;
 	let xmlServer;
 	let errServer;
+	let gzippedServer;
 
 	beforeEach(() => {
 		htmlServer = createHtmlServer(); // 4444
 		xmlServer = createXmlServer(); // 4445
 		errServer = createErrorServer(); // 4446
+		gzippedServer = createGzippedServer(); // 4452
 	});
 
 	afterEach(() => {
 		htmlServer.close();
 		xmlServer.close();
 		errServer.close();
+		gzippedServer.close();
 		vi.restoreAllMocks();
 	});
 
@@ -97,5 +101,12 @@ describe('SitemapFetcher.fetch', () => {
 
 		await fetcher.fetch('http://localhost:4445');
 		expect(fetcher2._makeHeaders()['User-Agent']).toBe('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36 mapsite/1.0');
+	});
+
+	it('automatically handles gzipped fetches', async () => {
+		const fetcher2 = new SitemapFetcher();
+
+		const response = await fetcher2.fetch('http://localhost:4452');
+		expect(response).toMatch('<?xml version="1.0"');
 	});
 });

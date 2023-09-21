@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { ungzip } from 'node-gzip';
 import { Dispatcher, request } from 'undici';
 
 type OneToTen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
-type StrictContentType = 'text/xml' | 'application/xml' | 'application/rss+xml';
+type StrictContentType = 'text/xml' | 'application/xml' | 'application/rss+xml' | 'application/gzip';
 
 export interface SitemapFetcherConstructorOptions {
   rejectInvalidContentType?: boolean;
@@ -17,6 +18,7 @@ const allowedContentTypesWhenStrict: StrictContentType[] = [
 	'text/xml',
 	'application/xml',
 	'application/rss+xml',
+  'application/gzip'
 ];
 
 export const oneToTenSchema = z.number().int().min(1).max(10);
@@ -130,6 +132,11 @@ export class SitemapFetcher {
 				);
 			}
 		}
+
+    if (contentTypeHeaders.includes('application/gzip')) {
+      const unzipped = await ungzip(await response.body.arrayBuffer());
+      return unzipped.toString();
+    }
 
 		return response.body.text();
 	}

@@ -1,6 +1,7 @@
 import { createServer } from 'http';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { gzip } from 'node-gzip';
 
 export const createHtmlServer = () =>
 	createServer((_, response) => {
@@ -56,3 +57,11 @@ export const createMediaServer = () =>
 		response.setHeader('Content-Type', 'application/xml');
 		response.end(sitemapFile);
 	}).listen(4451);
+
+export const createGzippedServer = () =>
+	createServer(async (_, response) => {
+		const sitemapFile = readFileSync(join(__dirname, './files/sitemap.xml'));
+		response.setHeader('Content-Type', 'application/gzip');
+		const gzipped = await gzip(sitemapFile);
+		response.end(gzipped);
+	}).listen(4452);

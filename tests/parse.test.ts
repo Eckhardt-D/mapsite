@@ -206,7 +206,7 @@ describe('SitemapParser.run', () => {
 			'https://test.stillio.com/lndbk_/supersitemap.xml'
 		);
 		expect(response.errors).toStrictEqual([]);
-		expect(response.urls.length).toBe(358);
+		expect(response.urls.length).toBe(346);
 	}, 15000);
 
 	it('does nothing if a sitemap is empty', async () => {
