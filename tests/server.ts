@@ -65,3 +65,12 @@ export const createGzippedServer = () =>
 		const gzipped = await gzip(sitemapFile);
 		response.end(gzipped);
 	}).listen(4452);
+
+export const createEdgeCase1Server = () =>
+	createServer(async (_, response) => {
+		const sitemapFile = readFileSync(join(__dirname, './files/edgecase1.xml'));
+		response.setHeader('Content-Type', 'application/gzip');
+		const gzipped = await gzip(sitemapFile);
+		response.end(gzipped);
+	}).listen(4453);
+

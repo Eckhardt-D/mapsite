@@ -1,3 +1,4 @@
+import type { Server } from 'node:http';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SitemapParser } from '../src';
 import { SitemapFetcher } from '../src/fetch';
@@ -7,6 +8,7 @@ import {
 	createEmptySitemapServer,
 	createNamespacedServer,
 	createMediaServer,
+	createEdgeCase1Server
 } from './server';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -42,11 +44,12 @@ describe('SitemapParser.run', () => {
 		userAgent: 'Custom',
 	});
 
-	let xmlFileServer;
-	let xmlIndexServer;
-	let emptyXmlServer;
-	let namespacedServer;
-	let mediaServer;
+	let xmlFileServer: Server;
+	let xmlIndexServer: Server;
+	let emptyXmlServer: Server;
+	let namespacedServer: Server;
+	let mediaServer: Server;
+	let edgeCase1Server: Server;
 
 	beforeEach(() => {
 		xmlFileServer = createSitemapServer(); // 4448
@@ -54,6 +57,7 @@ describe('SitemapParser.run', () => {
 		emptyXmlServer = createEmptySitemapServer(); // 4449
 		namespacedServer = createNamespacedServer(); // 4450
 		mediaServer = createMediaServer(); // 4451
+		edgeCase1Server = createEdgeCase1Server(); // 4453
 	});
 
 	afterEach(() => {
@@ -62,6 +66,7 @@ describe('SitemapParser.run', () => {
 		emptyXmlServer.close();
 		namespacedServer.close();
 		mediaServer.close();
+		edgeCase1Server.close();
 		vi.restoreAllMocks();
 	});
 
@@ -217,6 +222,15 @@ describe('SitemapParser.run', () => {
 			urls: [],
 		});
 	});
+
+	it('parses all items in edge case', async () => {
+		parser.maximumDepth = 10;
+		const response = await parser.run(
+			'http://localhost:4453'
+		);
+		expect(response.errors).toStrictEqual([]);
+		expect(response.urls.length).toBe(400);
+	}, 15000);
 });
 
 describe('SitemapParser.fromBuffer', () => {
