@@ -27,14 +27,14 @@ export const oneToTenSchema = z.number().int().min(1).max(10);
 export const constructorOptionsSchema = z
 	.object({
 		rejectInvalidContentType: z.boolean().default(true),
-		userAgent: z.string().default('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36 mapsite/1.0'),
+		userAgent: z.string().default('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'),
 		maximumRetries: oneToTenSchema.default(1),
 		timeout: z.number().default(3000),
 		debug: z.boolean().default(false),
 	})
 	.default({
 		rejectInvalidContentType: true,
-		userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36 mapsite/1.0',
+		userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
 		maximumRetries: 1,
 		timeout: 3000,
 		debug: false,
