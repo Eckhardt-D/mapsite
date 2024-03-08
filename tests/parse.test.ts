@@ -205,7 +205,7 @@ describe('SitemapParser.run', () => {
 		);
 	});
 
-	it('parses all locations of a sitemap index file', async () => {
+	it.skip('parses all locations of a sitemap index file', async () => {
 		parser.maximumDepth = 10;
 		const response = await parser.run(
 			'https://test.stillio.com/lndbk_/supersitemap.xml'

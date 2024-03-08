@@ -1,3 +1,4 @@
+import { createProxy } from 'proxy';
 import { createServer } from 'http';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -74,3 +75,4 @@ export const createEdgeCase1Server = () =>
 		response.end(gzipped);
 	}).listen(4453);
 
+export const createProxyServer = () => createProxy(createServer()).listen(4454);

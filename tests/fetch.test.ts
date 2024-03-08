@@ -1,3 +1,4 @@
+import type { Server } from 'node:http';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SitemapFetcher } from '../src/fetch';
 
@@ -6,6 +7,7 @@ import {
 	createHtmlServer,
 	createXmlServer,
 	createGzippedServer,
+	createProxyServer
 } from './server';
 
 describe('SitemapFetcher.constructor', () => {
@@ -30,16 +32,18 @@ describe('SitemapFetcher.constructor', () => {
 describe('SitemapFetcher.fetch', () => {
 	const fetcher = new SitemapFetcher();
 
-	let htmlServer;
-	let xmlServer;
-	let errServer;
-	let gzippedServer;
+	let htmlServer: Server;
+	let xmlServer: Server;
+	let errServer: Server;
+	let gzippedServer: Server;
+	let proxyServer: Server;
 
 	beforeEach(() => {
 		htmlServer = createHtmlServer(); // 4444
 		xmlServer = createXmlServer(); // 4445
 		errServer = createErrorServer(); // 4446
 		gzippedServer = createGzippedServer(); // 4452
+		proxyServer = createProxyServer(); // 4454;
 	});
 
 	afterEach(() => {
@@ -47,6 +51,7 @@ describe('SitemapFetcher.fetch', () => {
 		xmlServer.close();
 		errServer.close();
 		gzippedServer.close();
+		proxyServer.close();
 		vi.restoreAllMocks();
 	});
 
@@ -100,11 +105,26 @@ describe('SitemapFetcher.fetch', () => {
 		const fetcher2 = new SitemapFetcher();
 
 		await fetcher.fetch('http://localhost:4445');
-		expect(fetcher2._makeHeaders()['User-Agent']).toBe('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36 mapsite/1.0');
+		expect(fetcher2._makeHeaders()['User-Agent']).toBe('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
 	});
 
 	it('automatically handles gzipped fetches', async () => {
 		const fetcher2 = new SitemapFetcher();
+
+		const response = await fetcher2.fetch('http://localhost:4452');
+		expect(response).toMatch('<?xml version="1.0"');
+	});
+
+	it('fetches via a proxy', async () => {
+		expect.assertions(2);
+
+		proxyServer.on('connect', () => {
+			expect(true).toBe(true);
+		});
+
+		const fetcher2 = new SitemapFetcher({
+			proxy: 'http://127.0.0.1:4454'
+		});
 
 		const response = await fetcher2.fetch('http://localhost:4452');
 		expect(response).toMatch('<?xml version="1.0"');
