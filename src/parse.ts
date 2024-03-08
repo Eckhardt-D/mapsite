@@ -23,6 +23,7 @@ const sitemapParserConstructorOptionsSchema = z
 		userAgent: z.string().optional(),
 		timeout: z.number().optional(),
 		debug: z.boolean().optional(),
+		proxy: z.string().optional(),
 	})
 	.default({
 		maximumDepth: 2,

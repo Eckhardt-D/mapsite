@@ -27,6 +27,16 @@ const options = {
 const parser = new SitemapParser(options);
 ```
 
+### With proxy
+
+```js
+const { SitemapParser } = require("mapsite");
+
+const parser = new SitemapParser({
+  proxy: 'https://username:password@proxy.host:3000'
+});
+```
+
 ## options
 
 All options are optional, with default fallbacks encoded.
@@ -76,6 +86,14 @@ The number of milliseconds allowed for a request to complete, both headers or bo
 `debug`: boolean;
 
 Logs info, warning and error messages as the parser runs (WIP).
+
+---
+
+---
+
+`proxy`: string;
+
+A URL of a proxy server to proxy the request through.
 
 ---
 
