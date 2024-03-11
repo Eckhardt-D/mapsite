@@ -63,7 +63,12 @@ export class SitemapFetcher {
 		this.debug = params?.debug;
 
 		if (params.proxy !== undefined) {
-			this.proxyAgent = new ProxyAgent(params.proxy);
+			this.proxyAgent = new ProxyAgent({
+				uri: params.proxy,
+				connect: {
+					rejectUnauthorized: false
+				}
+			});
 		}
 	}
 
