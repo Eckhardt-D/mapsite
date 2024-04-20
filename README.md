@@ -1,3 +1,5 @@
+> Note: Version 2 of this package may differ in results from version 1.x. Mainly because the parser is now using Cheerio
+
 # Getting Started
 
 ```bash

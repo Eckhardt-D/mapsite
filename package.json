@@ -1,6 +1,6 @@
 {
   "name": "mapsite",
-  "version": "1.4.2",
+  "version": "2.0.0",
   "description": "A module to parse urls from a local or remote sitemap.xml",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -35,7 +35,9 @@
     "vitest": "^0.19.1"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
     "node-gzip": "^1.1.2",
+    "node-xml-stream": "^1.0.2",
     "undici": "^5.8.0",
     "zod": "^3.17.10"
   }

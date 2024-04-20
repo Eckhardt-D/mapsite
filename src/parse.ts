@@ -5,6 +5,7 @@ import {
 } from './fetch';
 
 import { z } from 'zod';
+import { load as loadHTML } from 'cheerio';
 
 interface SitemapParserOptions {
   maximumDepth?: number;
@@ -114,6 +115,107 @@ export class SitemapParser {
 		return result;
 	}
 
+	async #parseWithCheerio(
+		url: string,
+		text: string,
+		response: MapSiteResponse = {
+			type: 'sitemap',
+			urls: [],
+			errors: [],
+		}
+	): Promise<MapSiteResponse> {
+		try {
+			// First convert all namespaced :loc to loc
+			// This is because cheerio does not support namespaced tags
+			// ignore media namespaced items
+			text = text.replace(/<((?!(image|video))[A-z0-9]+):loc>/g, '<loc>');
+			text = text.replace(/<\/((?!(image|video))[A-z0-9]+):loc>/g, '</loc>');
+
+			const $ = loadHTML(text, {
+				decodeEntities: false,
+			});
+
+			// First check if the sitemap is an index
+			const isIndexFile = $('sitemapindex').length > 0;
+
+			response.type = isIndexFile ? 'index' : 'sitemap';
+
+			if (text.length < 1) {
+				return response;
+			}
+
+			// Using: Cheeerio
+			// Then we need to collect all the urls of the index file
+			// and parse them recursively
+			// If the depth is greater than the maximum depth, we will stop
+			// and return the response
+			//
+			// if it is not an index file, we will just return the urls
+
+			const urls = $('loc').map((_, elem) => $(elem).text().trim()).get();
+
+			if (isIndexFile) {
+				if (this.#currentDepth >= this.maximumDepth) {
+					response.errors.push({
+						reason: 'Maximum recursive depth reached, more sites available.',
+						url,
+					});
+					return response;
+				}
+
+				this.#currentDepth += 1;
+
+				// Only dispatch maximum 3 promises at a
+				// time in the recursive call
+
+				const batches: string[][] = [];
+
+				for (let i = 0; i < urls.length; i += 3) {
+					batches.push(urls.slice(i, i + 3));
+				}
+
+				const sleep = (ms: number) => new Promise(
+					(resolve) => setTimeout(resolve, ms)
+				);
+
+				for (const batch of batches) {
+					const promises = batch.map((loc) =>
+						this.#fetcher
+							.fetch(loc)
+							.then((txt) => this.#parseWithCheerio(
+								loc, txt, response
+							))
+							.catch((error) => {
+								response.errors.push({
+									reason: error.message,
+									url: loc,
+								});
+								return response;
+							})
+					);
+
+					await Promise.all(promises);
+					await sleep(200);
+				}
+
+				// Do not add index file URLS
+				return response;
+			}
+
+			return urls.reduce<MapSiteResponse>((previous, current) => {
+				previous.urls.push(current);
+				return previous;
+			}, response);
+		} catch (error) {
+			response.errors.push({
+				url,
+				reason: error.message,
+			});
+
+			return response;
+		}
+	}
+
 	async #parsePossibleXMLText(
 		url: string,
 		text: string,
@@ -181,7 +283,7 @@ export class SitemapParser {
 	async run(url: string): Promise<MapSiteResponse> {
 		try {
 			const text = await this.#fetcher.fetch(url);
-			return this.#parsePossibleXMLText(url, text);
+			return this.#parseWithCheerio(url, text);
 		} catch (error) {
 			return {
 				type: 'sitemap',
@@ -199,7 +301,7 @@ export class SitemapParser {
 	async fromBuffer(buffer: Buffer): Promise<MapSiteResponse> {
 		try {
 			const text = this.#getTextFromBuffer(buffer);
-			return this.#parsePossibleXMLText('buffer', text);
+			return this.#parseWithCheerio('buffer', text);
 		} catch (error) {
 			return {
 				type: 'sitemap',
