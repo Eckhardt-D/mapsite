@@ -170,8 +170,10 @@ export class SitemapParser {
 
 				const batches: string[][] = [];
 
-				for (let i = 0; i < urls.length; i += 3) {
-					batches.push(urls.slice(i, i + 3));
+				// TODO: instead of copying memory here
+				// we can mutate the original array
+				while (urls.length > 0) {
+					batches.push(urls.splice(0, 3));
 				}
 
 				const sleep = (ms: number) => new Promise(
@@ -195,7 +197,7 @@ export class SitemapParser {
 					);
 
 					await Promise.all(promises);
-					await sleep(200);
+					await sleep(50);
 				}
 
 				// Do not add index file URLS

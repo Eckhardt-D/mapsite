@@ -117,6 +117,17 @@ export class SitemapFetcher {
 				options.dispatcher = this.proxyAgent;
 			}
 
+			const parsed_url = new URL(url);
+			const username = parsed_url.username;
+			const password = parsed_url.password;
+
+			// Parse basic auth from URL
+			if (username && password) {
+				options.headers['Authorization'] = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+				const cleaned_url = url.replace(`${username}:${password}@`, '');
+				return request(cleaned_url, options);
+			}
+
 			return request(url, options);
 		};
 
