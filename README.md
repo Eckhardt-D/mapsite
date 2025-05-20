@@ -83,11 +83,15 @@ How many levels deep should XML index files be traversed. E.g. if index files ar
 
 The number of milliseconds allowed for a request to complete, both headers or body will timeout at this point.
 
+`default: 300`
+
 ---
 
 `debug`: boolean;
 
 Logs info, warning and error messages as the parser runs (WIP).
+
+`default: false`
 
 ---
 
