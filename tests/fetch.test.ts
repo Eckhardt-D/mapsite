@@ -83,7 +83,7 @@ describe('SitemapFetcher.fetch', () => {
 		fetcher.maximumRetries = 3;
 		await expect(
 			fetcher.fetch('http://localhost:4446')
-		).rejects.toThrow('Response status code 500: Internal Server Error');
+		).rejects.toThrow('Unexpected response status (500)');
 		expect(fetcher.currentRetry).toBe(3);
 	});
 
@@ -105,7 +105,7 @@ describe('SitemapFetcher.fetch', () => {
 		const fetcher2 = new SitemapFetcher();
 
 		await fetcher.fetch('http://localhost:4445');
-		expect(fetcher2._makeHeaders()['User-Agent']).toBe('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+		expect(fetcher2._makeHeaders()['User-Agent']).toBe('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36');
 	});
 
 	it('automatically handles gzipped fetches', async () => {

@@ -1,6 +1,6 @@
 {
   "name": "mapsite",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A module to parse urls from a local or remote sitemap.xml",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,18 +27,19 @@
     "@types/node-gzip": "^1.1.0",
     "@typescript-eslint/eslint-plugin": "^5.31.0",
     "@typescript-eslint/parser": "^5.31.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "c8": "^7.12.0",
     "eslint": "^8.20.0",
     "proxy": "^2.1.1",
-    "tsup": "^6.2.0",
+    "tsup": "^8.5.1",
     "typescript": "^4.7.4",
-    "vitest": "^0.19.1"
+    "vitest": "^4.1.5"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
     "node-gzip": "^1.1.2",
     "node-xml-stream": "^1.0.2",
-    "undici": "^5.8.0",
+    "undici": "^8.2.0",
     "zod": "^3.17.10"
   }
 }

@@ -19,7 +19,7 @@ export const oneToTenSchema = z.number().int().min(1).max(10);
 export const constructorOptionsSchema = z
 	.object({
 		rejectInvalidContentType: z.boolean().default(true),
-		userAgent: z.string().default('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'),
+		userAgent: z.string().default('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36'),
 		maximumRetries: oneToTenSchema.default(1),
 		timeout: z.number().default(3000),
 		debug: z.boolean().default(false),
@@ -105,12 +105,11 @@ export class SitemapFetcher {
 
 	async fetch(url: string) {
 		const requestCallable = () => {
-			const options: Omit<Dispatcher.RequestOptions, 'path' | 'method'> & { dispatcher?: Dispatcher } = {
-				throwOnError: true,
+			const options = {
+				dispatcher: undefined,
 				headersTimeout: this.timeout,
 				bodyTimeout: this.timeout,
 				headers: this.#makeHeaders(),
-				maxRedirections: 5,
 			}; 
 
 			if (this.proxyAgent !== undefined) {
@@ -128,7 +127,16 @@ export class SitemapFetcher {
 				return request(cleaned_url, options);
 			}
 
-			return request(url, options);
+			return request(url, options)
+				.then(response => {
+					if (response.statusCode >= 400) {
+						throw new Error(
+							'Unexpected response status'
+							+ ` (${response.statusCode})`
+						);
+					}
+					return response;
+				});
 		};
 
 		const response = await this.#fetchWithRetries(requestCallable);
