@@ -60,7 +60,7 @@ npm test
 
 if $dry_run; then
   echo "Dry run: would bump $current_version ($bump), publish with --tag $dist_tag, and push."
-  npm publish --dry-run --tag "$dist_tag"
+  npm pack --dry-run
   exit 0
 fi
 

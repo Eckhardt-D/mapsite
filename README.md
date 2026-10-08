@@ -180,7 +180,7 @@ a clean, up-to-date `v2` checkout:
 
 ```bash
 npm run release -- patch            # or: minor
-npm run release -- patch --dry-run  # run the checks and `npm publish --dry-run`
+npm run release -- patch --dry-run  # run the checks and `npm pack --dry-run`
 ```
 
 The script runs lint, typecheck, and tests, bumps the version (commit and tag),
