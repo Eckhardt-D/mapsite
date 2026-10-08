@@ -1,0 +1,20 @@
+name: Guard
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions: {}
+
+jobs:
+  no-v2-into-master:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject pull requests from the v2 maintenance branch
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" = "v2" ]; then
+            echo "::error::v2 is the 2.x maintenance branch and must never be merged into master."
+            exit 1
+          fi

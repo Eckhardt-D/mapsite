@@ -1,16 +1,31 @@
 {
   "name": "mapsite",
   "version": "2.2.1",
-  "description": "A module to parse urls from a local or remote sitemap.xml",
+  "description": "Fetch and parse URLs from local or remote sitemaps, sitemap indexes, RSS/Atom feeds and robots.txt",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
   "scripts": {
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
-    "compile": "tsup src/index.ts --dts --clean",
-    "prepack": "npm run compile"
+    "compile": "tsup src/index.ts --format cjs,esm --dts --target node22 --clean",
+    "prepack": "npm run compile",
+    "release": "scripts/release.sh"
   },
   "repository": {
     "type": "git",
@@ -18,7 +33,11 @@
   },
   "keywords": [
     "sitemap",
+    "sitemap.xml",
     "parser",
+    "crawler",
+    "robots.txt",
+    "rss",
     "xml"
   ],
   "author": "Eckhardt <eckhardt@dreyer.com.na>",
@@ -39,9 +58,8 @@
     "vitest": "4.1.11"
   },
   "dependencies": {
-    "cheerio": "^1.2.0",
-    "undici": "^8.11.2",
-    "zod": "^3.25.76"
+    "htmlparser2": "^12.0.0",
+    "undici": "^8.11.2"
   },
   "engines": {
     "node": ">=22.19.0"
@@ -49,5 +67,6 @@
   "files": [
     "dist/",
     "CHANGELOG.md"
-  ]
+  ],
+  "module": "dist/index.mjs"
 }
