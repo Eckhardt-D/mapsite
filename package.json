@@ -1,6 +1,6 @@
 {
   "name": "mapsite",
-  "version": "3.0.0-beta.0",
+  "version": "3.0.0-beta.1",
   "description": "Fetch and parse URLs from local or remote sitemaps, sitemap indexes, RSS/Atom feeds and robots.txt",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
