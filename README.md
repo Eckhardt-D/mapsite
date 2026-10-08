@@ -8,7 +8,7 @@ Fetch and parse the URLs of a sitemap: XML sitemaps, sitemap indexes (followed r
 Requires Node.js 22.19.0 or newer. Ships ESM and CommonJS builds with TypeScript types.
 
 ```bash
-npm install mapsite
+npm install mapsite@next   # 3.x beta; `latest` is still 2.x
 ```
 
 ## Usage

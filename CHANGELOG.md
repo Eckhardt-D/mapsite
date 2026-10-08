@@ -6,6 +6,11 @@ The constructor, option names, `run`, `fromBuffer` and the `{ type, urls, errors
 result are unchanged. The internals were rewritten; see "Upgrading from 2.x" in the
 README for the full list of differences.
 
+### Fixed
+
+- Works on Bun: redirects are followed internally instead of via `Dispatcher.compose`.
+- A `Content-Type` header with several comma-joined values is accepted if any is allowed.
+
 ### Breaking
 
 - `type` reports the root document: a sitemap index is `"index"` (2.x returned
