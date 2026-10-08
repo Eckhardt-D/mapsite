@@ -10,7 +10,9 @@
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
     "compile": "tsup src/index.ts --dts --clean",
-    "prepack": "npm run compile"
+    "prepack": "npm run compile",
+    "release": "scripts/release.sh",
+    "release": "scripts/release.sh"
   },
   "repository": {
     "type": "git",
