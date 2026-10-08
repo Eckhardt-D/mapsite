@@ -2,6 +2,8 @@
 
 # Getting Started
 
+Requires Node.js 22.19.0 or newer.
+
 ```bash
 npm install mapsite
 ```
@@ -59,7 +61,7 @@ Checks that the response content-type header MUST be:
 
 Adds a custom `User-Agent` string to the requests.
 
-`default: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36 mapsite/1.0`
+`default: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36`
 
 ---
 
@@ -67,11 +69,11 @@ Adds a custom `User-Agent` string to the requests.
 
 How many times a url in the `<loc>` tag of an XML index file should be requested when response status is not < 400.
 
-`default: 1`
+`default: 3` when no options object is supplied; `1` when an options object omits this field.
 
 ---
 
-`maximumDepth`: string;
+`maximumDepth`: number;
 
 How many levels deep should XML index files be traversed. E.g. if index files are nested 3 levels and maximum depth is 2. The last response will not crawl the URLs in the `<loc>` tag further.
 
@@ -83,7 +85,7 @@ How many levels deep should XML index files be traversed. E.g. if index files ar
 
 The number of milliseconds allowed for a request to complete, both headers or body will timeout at this point.
 
-`default: 300`
+`default: 3000`
 
 ---
 
@@ -154,3 +156,18 @@ const result = {
   ],
 };
 ```
+
+## Development
+
+```bash
+npm ci
+npm test
+npm run test:coverage
+npm run lint
+npm run typecheck
+npm run compile
+```
+
+Tests use local HTTP fixtures and do not request external websites. Coverage is
+optional for local runs. `npm pack` and `npm publish` rebuild the CommonJS entry
+and TypeScript declarations automatically.

@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { ungzip } from 'node-gzip';
+import { gunzip } from 'node:zlib';
+import { promisify } from 'node:util';
+
+const ungzip = promisify(gunzip);
 import { Dispatcher, ProxyAgent, request } from 'undici';
 
 type OneToTen = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
@@ -73,7 +76,7 @@ export class SitemapFetcher {
 	}
 
 	#makeHeaders() {
-		const headers: HeadersInit = {};
+		const headers: Record<string, string> = {};
 
 		if (this.rejectInvalidContentType) {
 			headers['Accept'] = 'text/xml, application/xml, application/rss+xml';
@@ -91,52 +94,44 @@ export class SitemapFetcher {
 	async #fetchWithRetries(
 		requestFn: () => Promise<Dispatcher.ResponseData>
 	): Promise<Dispatcher.ResponseData> {
-		try {
-			return await requestFn();
-		} catch (error) {
-			if (this.#currentRetry >= this.maximumRetries) {
-				throw error;
-			}
+		let retries = 0;
+		this.#currentRetry = 0;
 
-			this.#currentRetry += 1;
-			return this.#fetchWithRetries(requestFn);
+		while (true) {
+			try {
+				return await requestFn();
+			} catch (error) {
+				if (retries >= this.maximumRetries) throw error;
+				this.#currentRetry = ++retries;
+			}
 		}
 	}
 
 	async fetch(url: string) {
-		const requestCallable = () => {
+		const requestCallable = async () => {
 			const options = {
-				dispatcher: undefined,
+				dispatcher: this.proxyAgent,
 				headersTimeout: this.timeout,
 				bodyTimeout: this.timeout,
 				headers: this.#makeHeaders(),
-			}; 
+			};
+			const parsedURL = new URL(url);
 
-			if (this.proxyAgent !== undefined) {
-				options.dispatcher = this.proxyAgent;
-			}
-
-			const parsed_url = new URL(url);
-			const username = parsed_url.username;
-			const password = parsed_url.password;
-
-			// Parse basic auth from URL
-			if (username && password) {
+			// Remove URL credentials after constructing the Basic Auth header.
+			if (parsedURL.username || parsedURL.password) {
+				const username = decodeURIComponent(parsedURL.username);
+				const password = decodeURIComponent(parsedURL.password);
 				options.headers['Authorization'] = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-				const cleaned_url = url.replace(`${username}:${password}@`, '');
-				return request(cleaned_url, options);
+				parsedURL.username = '';
+				parsedURL.password = '';
 			}
 
-			return request(url, options)
-				.then(response => {
-					if (response.statusCode >= 400) {
-						throw new Error(
-							'Unexpected response status'
-							+ ` (${response.statusCode})`
-						);
-					}
-					return response;
-				});
+			const response = await request(parsedURL, options);
+			if (response.statusCode >= 400) {
+				await response.body.dump();
+				throw new Error(`Unexpected response status (${response.statusCode})`);
+			}
+			return response;
 		};
 
 		const response = await this.#fetchWithRetries(requestCallable);
@@ -154,6 +149,7 @@ export class SitemapFetcher {
        * the specific value and nothing else (except charset).
        */
 			if (!includesHeader) {
+				await response.body.dump();
 				throw new Error(
 					`Response rejected, invalid "Content-Type" header: ${
 						contentTypeHeaders
@@ -167,10 +163,10 @@ export class SitemapFetcher {
       *  when sending gzipped content.
       */
 		const isZipped = ['application/zip', 'application/gzip']
-			.some(format => contentTypeHeaders.includes(format));
+			.some(format => contentTypeHeaders?.includes(format));
 
 		if (isZipped) {
-			const unzipped = await ungzip(await response.body.arrayBuffer());
+			const unzipped = await ungzip(Buffer.from(await response.body.arrayBuffer()));
 			return unzipped.toString();
 		}
 

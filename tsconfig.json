@@ -1,6 +1,17 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "target": "ES2015"
-  }
+    "target": "ES2015",
+    "types": [
+      "node"
+    ],
+    "skipLibCheck": true,
+    "lib": [
+      "ES2023"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts"
+  ]
 }

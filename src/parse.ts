@@ -18,7 +18,7 @@ interface MapSiteError {
 
 const sitemapParserConstructorOptionsSchema = z
 	.object({
-		maximumDepth: oneToTenSchema.optional(),
+		maximumDepth: oneToTenSchema.default(2),
 		rejectInvalidContentType: z.boolean().optional(),
 		maximumRetries: oneToTenSchema.optional(),
 		userAgent: z.string().optional(),
@@ -51,12 +51,11 @@ export class SitemapParser {
 	constructor(options?: SitemapParserConstructorOptions) {
 		const params = sitemapParserConstructorOptionsSchema.parse(
 			options
-		) as SitemapParserConstructorOptions;
+		);
 
 		const { maximumDepth, ...rest } = params;
 
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		this.maximumDepth = maximumDepth!; // Will be set by Zod
+		this.maximumDepth = maximumDepth;
 		this.#fetcher = new SitemapFetcher(rest);
 	}
 
@@ -87,34 +86,6 @@ export class SitemapParser {
 		return buffer.toString('utf-8');
 	}
 
-	#getURLsFromLines(lines: string[]): string[] {
-		const result = [];
-		const locMatcher = /<(.*:)?loc>(.*)<\/(.*:)?loc>/g;
-
-		for (let i = 0; i < lines.length; i++) {
-			let line = lines[i];
-
-			if (!line.includes('loc>')) continue;
-			line = line.trim().replace(/\s+/g, '');
-			/**
-			 * Do not includes google's media tags in the response
-			 */
-			if (line.includes('image:image') || line.includes('video:video')) continue;
-			const matched = line.matchAll(locMatcher);
-			const array = [...matched];
-
-			if (!array.length) continue;
-
-			const url = array[0][2];
-
-			if (url) {
-				result.push(url);
-			}
-		}
-
-		return result;
-	}
-
 	async #parseWithCheerio(
 		url: string,
 		text: string,
@@ -122,7 +93,8 @@ export class SitemapParser {
 			type: 'sitemap',
 			urls: [],
 			errors: [],
-		}
+		},
+		depth = 0
 	): Promise<MapSiteResponse> {
 		try {
 			// First convert all namespaced :loc to loc
@@ -131,9 +103,7 @@ export class SitemapParser {
 			text = text.replace(/<((?!(image|video))[A-z0-9]+):loc>/g, '<loc>');
 			text = text.replace(/<\/((?!(image|video))[A-z0-9]+):loc>/g, '</loc>');
 
-			const $ = loadHTML(text, {
-				decodeEntities: false,
-			});
+			const $ = loadHTML(text);
 
 			// First check if the sitemap is an index
 			const isIndexFile = $('sitemapindex').length > 0;
@@ -155,7 +125,7 @@ export class SitemapParser {
 			const urls = $('loc').map((_, elem) => $(elem).text().trim()).get();
 
 			if (isIndexFile) {
-				if (this.#currentDepth >= this.maximumDepth) {
+				if (depth >= this.maximumDepth) {
 					response.errors.push({
 						reason: 'Maximum recursive depth reached, more sites available.',
 						url,
@@ -163,7 +133,7 @@ export class SitemapParser {
 					return response;
 				}
 
-				this.#currentDepth += 1;
+				this.#currentDepth = Math.max(this.#currentDepth, depth + 1);
 
 				// Only dispatch maximum 3 promises at a
 				// time in the recursive call
@@ -185,7 +155,7 @@ export class SitemapParser {
 						this.#fetcher
 							.fetch(loc)
 							.then((txt) => this.#parseWithCheerio(
-								loc, txt, response
+								loc, txt, response, depth + 1
 							))
 							.catch((error) => {
 								response.errors.push({
@@ -218,71 +188,8 @@ export class SitemapParser {
 		}
 	}
 
-	async #parsePossibleXMLText(
-		url: string,
-		text: string,
-		response: MapSiteResponse = {
-			type: 'sitemap',
-			urls: [] as string[],
-			errors: [] as MapSiteError[],
-		}
-	): Promise<MapSiteResponse> {
-		try {
-			const sitemapMatcher = /<(.*:)?sitemap>/gm;
-			const isIndexFile = !!text.match(sitemapMatcher);
-			response.type = isIndexFile ? 'index' : 'sitemap';
-
-			if (text.length < 1) {
-				return response;
-			}
-
-			const lines = SitemapParser.getLinesFromText(text);
-			const urls = this.#getURLsFromLines(lines);
-
-			if (isIndexFile) {
-				if (this.#currentDepth >= this.maximumDepth) {
-					response.errors.push({
-						reason: 'Maximum recursive depth reached, more sites available.',
-						url,
-					});
-					return response;
-				}
-
-				this.#currentDepth += 1;
-				const promises = urls.map((loc) =>
-					this.#fetcher
-						.fetch(loc)
-						.then((txt) => this.#parsePossibleXMLText(
-							loc, txt, response
-						))
-						.catch((error) => {
-							response.errors.push({
-								reason: error.message,
-								url: loc,
-							});
-							return response;
-						})
-				);
-
-				await Promise.all(promises);
-				return response;
-			}
-
-			return urls.reduce<MapSiteResponse>((previous, current) => {
-				previous.urls.push(current);
-				return previous;
-			}, response);
-		} catch (error) {
-			response.errors.push({
-				url,
-				reason: error.message,
-			});
-
-			return response;
-		}
-	}
-
 	async run(url: string): Promise<MapSiteResponse> {
+		this.#currentDepth = 0;
 		try {
 			const text = await this.#fetcher.fetch(url);
 			return this.#parseWithCheerio(url, text);
@@ -301,6 +208,7 @@ export class SitemapParser {
 	}
 
 	async fromBuffer(buffer: Buffer): Promise<MapSiteResponse> {
+		this.#currentDepth = 0;
 		try {
 			const text = this.#getTextFromBuffer(buffer);
 			return this.#parseWithCheerio('buffer', text);
