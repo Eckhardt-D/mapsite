@@ -171,3 +171,19 @@ npm run compile
 Tests use local HTTP fixtures and do not request external websites. Coverage is
 optional for local runs. `npm pack` and `npm publish` rebuild the CommonJS entry
 and TypeScript declarations automatically.
+
+## Releasing (2.x maintenance line)
+
+Version 2 is maintained on the `v2` branch: bug fixes and security fixes only,
+no breaking changes. Open PRs against `v2`, add a `CHANGELOG.md` entry, then from
+a clean, up-to-date `v2` checkout:
+
+```bash
+npm run release -- patch            # or: minor
+npm run release -- patch --dry-run  # run the checks and `npm publish --dry-run`
+```
+
+The script runs lint, typecheck, and tests, bumps the version (commit and tag),
+publishes, and pushes the branch and tag. It publishes under the `latest`
+dist-tag while 2.x is the newest major, and under `v2` once a newer major owns
+`latest`, so a 2.x patch never replaces the current release.
