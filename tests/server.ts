@@ -1,79 +1,48 @@
-import { createProxy } from 'proxy';
-import { createServer } from 'http';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { gzip } from 'node-gzip';
+import { createServer, type RequestListener, type Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
-export const createHtmlServer = () =>
-	createServer((_, response) => {
-		response.setHeader('Content-Type', 'text/html');
-		response.end();
-	}).listen(4444);
+export async function startServer(handler: RequestListener) {
+	return listen(createServer(handler));
+}
 
-export const createXmlServer = () =>
-	createServer((_, response) => {
-		response.setHeader('Content-Type', 'application/xml');
-		response.end();
-	}).listen(4445);
+export async function listen(server: Server) {
+	await new Promise<void>((resolve, reject) => {
+		server.once('error', reject);
+		server.listen(0, '127.0.0.1', () => {
+			server.off('error', reject);
+			resolve();
+		});
+	});
+	const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+	return {
+		server,
+		url,
+		close: () => new Promise<void>((resolve, reject) => {
+			server.close(error => error ? reject(error) : resolve());
+			server.closeAllConnections();
+		}),
+	};
+}
 
-export const createErrorServer = () =>
-	createServer((_, response) => {
-		response.statusCode = 500;
-		response.end();
-	}).listen(4446);
+const fixtures = Object.fromEntries([
+	'sitemap', 'sitemap_index', 'empty', 'namespaced', 'media', 'edgecase1',
+].map(name => [name, readFileSync(join(__dirname, `files/${name}.xml`), 'utf8')]));
 
-export const createSitemapIndexServer = () =>
-	createServer((_, response) => {
-		const indexFile = readFileSync(
-			join(__dirname, './files/sitemap_index.xml')
-		);
-		response.setHeader('Content-Type', 'application/xml');
-		response.end(indexFile);
-	}).listen(4447);
-
-export const createSitemapServer = () =>
-	createServer((_, response) => {
-		const sitemapFile = readFileSync(join(__dirname, './files/sitemap.xml'));
-		response.setHeader('Content-Type', 'application/xml');
-		response.end(sitemapFile);
-	}).listen(4448);
-
-export const createEmptySitemapServer = () =>
-	createServer((_, response) => {
-		const sitemapFile = readFileSync(join(__dirname, './files/empty.xml'));
-		response.setHeader('Content-Type', 'application/xml');
-		response.end(sitemapFile);
-	}).listen(4449);
-
-export const createNamespacedServer = () =>
-	createServer((_, response) => {
-		const sitemapFile = readFileSync(join(__dirname, './files/namespaced.xml'));
-		response.setHeader('Content-Type', 'application/xml');
-		response.end(sitemapFile);
-	}).listen(4450);
-
-export const createMediaServer = () =>
-	createServer((_, response) => {
-		const sitemapFile = readFileSync(join(__dirname, './files/media.xml'));
-		response.setHeader('Content-Type', 'application/xml');
-		response.end(sitemapFile);
-	}).listen(4451);
-
-export const createGzippedServer = () =>
-	createServer(async (_, response) => {
-		const sitemapFile = readFileSync(join(__dirname, './files/sitemap.xml'));
-		response.setHeader('Content-Type', 'application/gzip');
-		const gzipped = await gzip(sitemapFile);
-		response.end(gzipped);
-	}).listen(4452);
-
-export const createEdgeCase1Server = () =>
-	createServer(async (_, response) => {
-		const sitemapFile = readFileSync(join(__dirname, './files/edgecase1.xml'));
-		response.setHeader('Content-Type', 'application/gzip');
-		const gzipped = await gzip(sitemapFile);
-		response.end(gzipped);
-	}).listen(4453);
-
-export const createProxyServer = () => createProxy(createServer()).listen(4454);
-
+export async function startSitemapServer() {
+	const fixture = await startServer((request, response) => {
+		const name = request.url?.slice(1).replace('.xml', '') || 'sitemap';
+		let text = fixtures[name];
+		if (text === undefined) {
+			response.writeHead(404).end();
+			return;
+		}
+		text = text.replaceAll('http://localhost:4448', fixture.url);
+		const zipped = name === 'edgecase1';
+		response.setHeader('Content-Type', zipped ? 'application/gzip' : 'application/xml');
+		response.end(zipped ? gzipSync(text) : text);
+	});
+	return fixture;
+}

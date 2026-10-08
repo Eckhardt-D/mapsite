@@ -1,15 +1,7 @@
-import type { Server } from 'node:http';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { SitemapParser } from '../src';
 import { SitemapFetcher } from '../src/fetch';
-import {
-	createSitemapServer,
-	createSitemapIndexServer,
-	createEmptySitemapServer,
-	createNamespacedServer,
-	createMediaServer,
-	createEdgeCase1Server
-} from './server';
+import { startSitemapServer } from './server';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -38,37 +30,19 @@ describe('SitemapParser.getLinesFromText', () => {
 });
 
 describe('SitemapParser.run', () => {
-	const parser = new SitemapParser({
-		maximumDepth: 1,
-		rejectInvalidContentType: false,
-		userAgent: 'Custom',
-	});
+	let parser: SitemapParser;
+	let fixture: Awaited<ReturnType<typeof startSitemapServer>>;
 
-	let xmlFileServer: Server;
-	let xmlIndexServer: Server;
-	let emptyXmlServer: Server;
-	let namespacedServer: Server;
-	let mediaServer: Server;
-	let edgeCase1Server: Server;
-
+	beforeAll(async () => { fixture = await startSitemapServer(); });
+	afterAll(async () => { await fixture.close(); });
 	beforeEach(() => {
-		xmlFileServer = createSitemapServer(); // 4448
-		xmlIndexServer = createSitemapIndexServer(); // 4447
-		emptyXmlServer = createEmptySitemapServer(); // 4449
-		namespacedServer = createNamespacedServer(); // 4450
-		mediaServer = createMediaServer(); // 4451
-		edgeCase1Server = createEdgeCase1Server(); // 4453
+		parser = new SitemapParser({
+			maximumDepth: 1,
+			rejectInvalidContentType: false,
+			userAgent: 'Custom',
+		});
 	});
-
-	afterEach(() => {
-		xmlFileServer.close();
-		xmlIndexServer.close();
-		emptyXmlServer.close();
-		namespacedServer.close();
-		mediaServer.close();
-		edgeCase1Server.close();
-		vi.restoreAllMocks();
-	});
+	afterEach(() => { vi.restoreAllMocks(); });
 
 	it('returns a list of errors if fetch failed', async () => {
 		const error = new Error('error');
@@ -76,7 +50,7 @@ describe('SitemapParser.run', () => {
 			.spyOn(SitemapFetcher.prototype, 'fetch')
 			.mockRejectedValue(error);
 
-		const response = await parser.run('http://localhost:4448');
+		const response = await parser.run(`${fixture.url}/sitemap.xml`);
 		expect(mock).toHaveBeenCalled();
 		expect(response).toStrictEqual({
 			type: 'sitemap',
@@ -84,14 +58,14 @@ describe('SitemapParser.run', () => {
 			errors: [
 				{
 					reason: 'error',
-					url: 'http://localhost:4448',
+					url: `${fixture.url}/sitemap.xml`,
 				},
 			],
 		});
 	});
 
 	it('parses a namespaced XML file', async () => {
-		const response = await parser.run('http://localhost:4450');
+		const response = await parser.run(`${fixture.url}/namespaced.xml`);
 		expect(response).toStrictEqual({
 			type: 'sitemap',
 			urls: [
@@ -149,7 +123,7 @@ describe('SitemapParser.run', () => {
 	});
 
 	it('parses a single XML file with default options', async () => {
-		const response = await parser.run('http://localhost:4448');
+		const response = await parser.run(`${fixture.url}/sitemap.xml`);
 		expect(response).toStrictEqual({
 			type: 'sitemap',
 			urls: [
@@ -164,7 +138,7 @@ describe('SitemapParser.run', () => {
 	});
 
 	it('parses a index XML file with default options', async () => {
-		const response = await parser.run('http://localhost:4447');
+		const response = await parser.run(`${fixture.url}/sitemap_index.xml`);
 		expect(response).toStrictEqual({
 			type: 'sitemap',
 			urls: [
@@ -178,25 +152,23 @@ describe('SitemapParser.run', () => {
 		});
 	});
 
-	it('does not parse an index XML file with maximumDepth less than last xml loc', async () => {
-		parser.maximumDepth = 1;
-		const response = await parser.run('http://localhost:4447');
+	it('enforces maximumDepth for genuinely nested indexes', async () => {
+		const index = `<sitemapindex><sitemap><loc>${fixture.url}/sitemap_index.xml</loc></sitemap></sitemapindex>`;
+		const response = await parser.fromBuffer(Buffer.from(index));
 		expect(parser.currentDepth).toBe(1);
 		expect(response).toStrictEqual({
 			type: 'index',
 			urls: [],
-			errors: [
-				{
-					reason: 'Maximum recursive depth reached, more sites available.',
-					url: 'http://localhost:4447',
-				},
-			],
+			errors: [{
+				reason: 'Maximum recursive depth reached, more sites available.',
+				url: `${fixture.url}/sitemap_index.xml`,
+			}],
 		});
 	});
 
 	it('does not parse media-related sitemap tags', async () => {
 		parser.maximumDepth = 2;
-		const response = await parser.run('http://localhost:4451');
+		const response = await parser.run(`${fixture.url}/media.xml`);
 		expect(response.urls).not.includes(
 			'https://public.com/wp-content/uploads/2020/05/Community-Roundtable-1.png'
 		);
@@ -205,17 +177,9 @@ describe('SitemapParser.run', () => {
 		);
 	});
 
-	it.skip('parses all locations of a sitemap index file', async () => {
-		parser.maximumDepth = 10;
-		const response = await parser.run(
-			'https://test.stillio.com/lndbk_/supersitemap.xml'
-		);
-		expect(response.errors).toStrictEqual([]);
-		expect(response.urls.length).toBe(346);
-	}, 15000);
 
 	it('does nothing if a sitemap is empty', async () => {
-		const response = await parser.run('http://localhost:4449');
+		const response = await parser.run(`${fixture.url}/empty.xml`);
 		expect(response).toStrictEqual({
 			type: 'sitemap',
 			errors: [],
@@ -226,7 +190,7 @@ describe('SitemapParser.run', () => {
 	it('parses all items in edge case', async () => {
 		parser.maximumDepth = 10;
 		const response = await parser.run(
-			'http://localhost:4453'
+			`${fixture.url}/edgecase1.xml`
 		);
 		expect(response.errors).toStrictEqual([]);
 		expect(response.urls.length).toBe(400);
@@ -267,37 +231,7 @@ describe('SitemapParser.fromBuffer', () => {
 		});
 	});
 
-	// We are using a different parser in V2 but want this to test
-	// in the older parser
-	it.skip('returns an error if something went wrong', async () => {
-		const buffer = Buffer.from(
-			readFileSync(join(__dirname, 'files/sitemap.xml'), {
-				encoding: 'binary',
-			})
-		);
-
-		const mock = vi
-			.spyOn(SitemapParser, 'getLinesFromText')
-			.mockImplementationOnce(() => {
-				throw new Error('error');
-			});
-
-		const result = await parser.fromBuffer(buffer);
-
-		expect(mock).toHaveBeenCalled();
-		expect(result).toStrictEqual({
-			type: 'sitemap',
-			errors: [
-				{
-					reason: 'error',
-					url: 'buffer',
-				},
-			],
-			urls: [],
-		});
-	});
-
-	it('Parser a sitemap buffer', async () => {
+	it('parses a sitemap buffer', async () => {
 		const buffer = Buffer.from(
 			readFileSync(join(__dirname, 'files/sitemap.xml'), {
 				encoding: 'binary',

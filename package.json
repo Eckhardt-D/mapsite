@@ -1,12 +1,16 @@
 {
   "name": "mapsite",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "A module to parse urls from a local or remote sitemap.xml",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "vitest run --config ./vitest.config.ts --coverage",
-    "compile": "tsup src/index.ts --dts"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src tests",
+    "typecheck": "tsc --noEmit",
+    "compile": "tsup src/index.ts --dts --clean",
+    "prepack": "npm run compile"
   },
   "repository": {
     "type": "git",
@@ -24,22 +28,26 @@
   },
   "homepage": "https://github.com/Eckhardt-D/mapsite#readme",
   "devDependencies": {
-    "@types/node-gzip": "^1.1.0",
-    "@typescript-eslint/eslint-plugin": "^5.31.0",
-    "@typescript-eslint/parser": "^5.31.0",
-    "@vitest/coverage-v8": "^4.1.5",
-    "c8": "^7.12.0",
-    "eslint": "^8.20.0",
+    "@types/node": "^22.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.71.1",
+    "@typescript-eslint/parser": "^8.71.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "^10.12.0",
     "proxy": "^2.1.1",
     "tsup": "^8.5.1",
-    "typescript": "^4.7.4",
-    "vitest": "^4.1.5"
+    "typescript": "^5.9.3",
+    "vitest": "4.1.11"
   },
   "dependencies": {
-    "cheerio": "^1.0.0-rc.12",
-    "node-gzip": "^1.1.2",
-    "node-xml-stream": "^1.0.2",
-    "undici": "^8.2.0",
-    "zod": "^3.17.10"
-  }
+    "cheerio": "^1.2.0",
+    "undici": "^8.11.2",
+    "zod": "^3.25.76"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md"
+  ]
 }
