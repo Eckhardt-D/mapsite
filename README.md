@@ -5,7 +5,7 @@
 Requires Node.js 22.19.0 or newer.
 
 ```bash
-npm install mapsite
+npm install mapsite@2
 ```
 
 or
