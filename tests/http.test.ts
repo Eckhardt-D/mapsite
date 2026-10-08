@@ -41,6 +41,18 @@ describe('content types', () => {
 		expect(result.urls).toEqual(PAGES);
 	});
 
+	it('accepts a duplicated Content-Type header when one value is allowed', async () => {
+		const site = await serve({ '/s': { type: 'text/html; charset=utf-8, application/xml;charset=utf-8', body: SITEMAP } });
+		const result = await createParser().run(`${site.url}/s`);
+		expect(result.urls).toEqual(PAGES);
+	});
+
+	it('rejects a duplicated Content-Type header when no value is allowed', async () => {
+		const site = await serve({ '/s': { type: 'text/html, image/png', body: SITEMAP } });
+		const result = await createParser().run(`${site.url}/s`);
+		expect(result.errors[0].reason).toContain('invalid "Content-Type"');
+	});
+
 	it('only asks for sitemap content types when strict', async () => {
 		const site = await serve({ '/s': xml(SITEMAP) });
 		await createParser().run(`${site.url}/s`);

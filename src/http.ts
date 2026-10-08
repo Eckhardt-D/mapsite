@@ -2,12 +2,13 @@ import { gunzip } from 'node:zlib';
 import { promisify } from 'node:util';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { Readable } from 'node:stream';
-import { Agent, ProxyAgent, interceptors, request, type Dispatcher } from 'undici';
+import { Agent, ProxyAgent, request, type Dispatcher } from 'undici';
 import type { ResolvedOptions } from './options';
 
 const gunzipAsync = promisify(gunzip);
 
 const MAXIMUM_REDIRECTS = 5;
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const MAXIMUM_BACKOFF = 10_000;
 
 const ACCEPT = 'text/xml, application/xml, application/rss+xml, application/atom+xml, text/plain, application/gzip';
@@ -67,6 +68,12 @@ async function readBody(body: Readable, limit: number): Promise<Buffer> {
 	return Buffer.concat(chunks, size);
 }
 
+// Bun's response bodies have no undici `dump()`.
+async function discard(body: Readable & { dump?: () => Promise<void> }): Promise<void> {
+	if (typeof body.dump === 'function') return body.dump();
+	body.destroy();
+}
+
 const isAbort = (error: unknown) => error instanceof Error && error.name === 'AbortError';
 
 function isRetryable(error: unknown): boolean {
@@ -83,10 +90,11 @@ export class HttpClient {
 
 	constructor(options: ResolvedOptions) {
 		this.#options = options;
-		const base = options.proxy === undefined
+		// Redirects are followed in #request rather than via `Dispatcher.compose`,
+		// which runtimes with their own undici shim (Bun) do not implement.
+		this.#dispatcher = options.proxy === undefined
 			? new Agent()
 			: new ProxyAgent({ uri: options.proxy, connect: { rejectUnauthorized: false } });
-		this.#dispatcher = base.compose(interceptors.redirect({ maxRedirections: MAXIMUM_REDIRECTS }));
 	}
 
 	/**
@@ -108,7 +116,8 @@ export class HttpClient {
 	}
 
 	close(): Promise<void> {
-		return this.#closing ??= this.#dispatcher.close().then(() => undefined);
+		// Bun's undici shim has no `close`; its connections are released on their own.
+		return this.#closing ??= Promise.resolve(this.#dispatcher.close?.()).then(() => undefined);
 	}
 
 	#prepare(rawUrl: string) {
@@ -134,27 +143,25 @@ export class HttpClient {
 	}
 
 	async #attempt(url: URL, headers: Record<string, string>, signal?: AbortSignal): Promise<Buffer> {
-		const { timeout, maximumResponseSize: limit, rejectInvalidContentType: strict } = this.#options;
-		const response = await request(url, {
-			dispatcher: this.#dispatcher,
-			headers,
-			signal,
-			headersTimeout: timeout,
-			bodyTimeout: timeout,
-		});
+		const { maximumResponseSize: limit, rejectInvalidContentType: strict } = this.#options;
+		const response = await this.#request(url, headers, signal);
 
 		const { statusCode } = response;
 		if (statusCode < 200 || statusCode >= 300) {
-			await response.body.dump();
+			await discard(response.body);
 			const transient = statusCode === 408 || statusCode === 425 || statusCode === 429 || statusCode >= 500;
 			throw new FetchError(`Unexpected response status (${statusCode})`, transient, statusCode);
 		}
 
 		const header = response.headers['content-type'];
-		const contentType = String(Array.isArray(header) ? header[0] : header ?? '');
-		const mediaType = contentType.split(';')[0].trim().toLowerCase();
+		const contentType = String(Array.isArray(header) ? header.join(', ') : header ?? '');
+		// Some servers send duplicated headers, joined as "a; charset=x, b;charset=y".
+		const mediaTypes = contentType.split(',').map((part) => part.split(';')[0].trim().toLowerCase());
+		const mediaType = mediaTypes.find((type) => ALLOWED_CONTENT_TYPES.has(type))
+			?? mediaTypes.find((type) => type === GENERIC_BINARY)
+			?? mediaTypes[0];
 		if (strict && !ALLOWED_CONTENT_TYPES.has(mediaType) && mediaType !== GENERIC_BINARY) {
-			await response.body.dump();
+			await discard(response.body);
 			throw new FetchError(`Response rejected, invalid "Content-Type" header: ${contentType || 'missing'}.`);
 		}
 
@@ -169,6 +176,39 @@ export class HttpClient {
 			throw new FetchError(`Response rejected, invalid "Content-Type" header: ${contentType}.`);
 		}
 		return inflate(bytes, limit);
+	}
+
+	async #request(url: URL, headers: Record<string, string>, signal?: AbortSignal) {
+		const { timeout } = this.#options;
+		const visited = new Set<string>();
+		for (let redirects = 0; ; redirects++) {
+			visited.add(url.href);
+			const response = await request(url, {
+				dispatcher: this.#dispatcher,
+				headers,
+				signal,
+				headersTimeout: timeout,
+				bodyTimeout: timeout,
+			});
+
+			const location = response.headers['location'];
+			if (!REDIRECT_STATUSES.has(response.statusCode) || typeof location !== 'string') return response;
+
+			await discard(response.body);
+			if (!URL.canParse(location, url.href)) throw new FetchError(`Invalid redirect location: ${location}`);
+			const next = new URL(location, url.href);
+			if (visited.has(next.href) || redirects >= MAXIMUM_REDIRECTS) {
+				throw new FetchError(`Redirect loop or too many redirects (more than ${MAXIMUM_REDIRECTS}) at ${next.href}.`);
+			}
+			if (next.protocol !== 'http:' && next.protocol !== 'https:') {
+				throw new FetchError(`Unsupported protocol "${next.protocol}", expected http: or https:.`);
+			}
+			// Never leak credentials to another origin.
+			if (next.origin !== url.origin) {
+				headers = Object.fromEntries(Object.entries(headers).filter(([name]) => name.toLowerCase() !== 'authorization'));
+			}
+			url = next;
+		}
 	}
 
 	#backoff(attempt: number): number {
