@@ -9,7 +9,7 @@ describe('discover', () => {
 			'/robots.txt': ({ base }) => robots('User-agent: *', 'Disallow: /private', `Sitemap: ${base}/map.xml`),
 			'/map.xml': xml(urlset('https://example.com/a')),
 		});
-		const result = await createParser().discover(site.url);
+		const result = await createParser({ includeEntries: true }).discover(site.url);
 		expect(result).toEqual({
 			type: 'sitemap',
 			urls: ['https://example.com/a'],

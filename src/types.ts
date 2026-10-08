@@ -24,7 +24,8 @@ export interface MapSiteResponse {
 	/** `index` when the root document (or any root, for `discover`) is a sitemap index. */
 	type: 'sitemap' | 'index';
 	urls: string[];
-	entries: SitemapEntry[];
+	/** Only present when the `includeEntries` option is on. */
+	entries?: SitemapEntry[];
 	errors: MapSiteError[];
 }
 

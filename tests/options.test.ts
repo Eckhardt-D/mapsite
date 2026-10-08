@@ -9,6 +9,15 @@ describe('options', () => {
 		expect(result.urls).toEqual(['https://example.com/']);
 	});
 
+	it('leaves out entries unless includeEntries is set', async () => {
+		const site = await serve({ '/s.xml': xml(urlset('https://example.com/')) });
+		const off = await createParser().run(`${site.url}/s.xml`);
+		expect(off).not.toHaveProperty('entries');
+		expect(off.urls).toEqual(['https://example.com/']);
+		const on = await createParser({ includeEntries: true }).run(`${site.url}/s.xml`);
+		expect(on.entries).toEqual([{ url: 'https://example.com/' }]);
+	});
+
 	it('accepts every documented option', () => {
 		const options: SitemapParserConstructorOptions = {
 			rejectInvalidContentType: false,
@@ -20,6 +29,7 @@ describe('options', () => {
 			concurrency: 20,
 			maximumResponseSize: 1024,
 			retryDelay: 0,
+			includeEntries: true,
 		};
 		expect(() => new SitemapParser(options)).not.toThrow();
 	});
@@ -42,6 +52,7 @@ describe('options', () => {
 		['concurrency', 21],
 		['maximumResponseSize', 0],
 		['retryDelay', -1],
+		['includeEntries', 'yes'],
 		['proxy', 'not a url'],
 		['proxy', 'ftp://proxy.example'],
 	])('rejects %s = %j, naming the option', (name, value) => {

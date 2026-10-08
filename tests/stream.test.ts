@@ -19,7 +19,7 @@ describe('stream', () => {
 		const site = await twoSitemaps();
 		const parser = createParser();
 		const streamed = await collect(parser.stream(`${site.url}/index.xml`));
-		const run = await parser.run(`${site.url}/index.xml`);
+		const run = await createParser({ includeEntries: true }).run(`${site.url}/index.xml`);
 		expect(streamed.map(entry => entry.url)).toEqual(['https://example.com/a1', 'https://example.com/a2', 'https://example.com/b1']);
 		expect(streamed).toEqual(run.entries);
 	});

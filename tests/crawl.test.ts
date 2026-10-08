@@ -4,7 +4,7 @@ import { createParser, serve, sitemapIndex, urlset, xml } from './helpers';
 describe('run', () => {
 	it('fetches a sitemap', async () => {
 		const site = await serve({ '/sitemap.xml': xml(urlset('https://example.com/a')) });
-		const result = await createParser().run(`${site.url}/sitemap.xml`);
+		const result = await createParser({ includeEntries: true }).run(`${site.url}/sitemap.xml`);
 		expect(result).toEqual({
 			type: 'sitemap',
 			urls: ['https://example.com/a'],
@@ -51,7 +51,6 @@ describe('run', () => {
 		expect(result).toEqual({
 			type: 'sitemap',
 			urls: [],
-			entries: [],
 			errors: [{ url: `${site.url}/nope.xml`, reason: 'Unexpected response status (404)' }],
 		});
 	});
@@ -68,7 +67,7 @@ describe('run', () => {
 	it('treats an empty document as an empty sitemap', async () => {
 		const site = await serve({ '/empty.xml': xml('') });
 		const result = await createParser().run(`${site.url}/empty.xml`);
-		expect(result).toEqual({ type: 'sitemap', urls: [], entries: [], errors: [] });
+		expect(result).toEqual({ type: 'sitemap', urls: [], errors: [] });
 	});
 
 	it('lets concurrent runs on one parser stay independent', async () => {

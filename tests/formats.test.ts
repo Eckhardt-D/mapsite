@@ -4,7 +4,7 @@ import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { createParser, sitemapIndex, urlset } from './helpers';
 
-const parse = (xml: string | Buffer) => createParser().fromBuffer(Buffer.from(xml));
+const parse = (xml: string | Buffer) => createParser({ includeEntries: true }).fromBuffer(Buffer.from(xml));
 const fixture = (name: string) => readFileSync(join(__dirname, 'fixtures', name));
 
 describe('sitemap', () => {
@@ -164,7 +164,7 @@ describe('real-world sitemaps', () => {
 		expect(result.errors).toEqual([]);
 		expect(result.urls).toHaveLength(48);
 		expect(result.urls[0]).toBe('https://www.onfi.com/');
-		expect(result.entries[1]).toMatchObject({ lastmod: '2017-03-01', changefreq: 'monthly', priority: 0.75 });
+		expect(result.entries?.[1]).toMatchObject({ lastmod: '2017-03-01', changefreq: 'monthly', priority: 0.75 });
 	});
 
 	it('reads every page of a large sitemap', async () => {

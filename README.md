@@ -33,12 +33,12 @@ await parser.close(); // releases pooled connections
 {
   type: "sitemap" | "index", // "index" when the root document is a sitemap index
   urls: string[],            // every page found, in document order, without duplicates
-  entries: SitemapEntry[],   // the same pages with their details (see below)
+  entries?: SitemapEntry[],  // the same pages with their details; only with includeEntries (see below)
   errors: { url: string; reason: string }[],
 }
 ```
 
-Each entry has a `url` and, when the sitemap provides them, `lastmod`, `changefreq`, `priority` (a number) and `alternates` (`{ href, hreflang? }[]` from `xhtml:link` tags). Values are reported as written.
+`entries` is only present when the `includeEntries` option is `true`. Each entry has a `url` and, when the sitemap provides them, `lastmod`, `changefreq`, `priority` (a number) and `alternates` (`{ href, hreflang? }[]` from `xhtml:link` tags). Values are reported as written.
 
 ## Methods
 
@@ -100,6 +100,7 @@ All options are optional. Invalid values throw a `TypeError` naming the option; 
 | `concurrency` | `3` | Sitemaps fetched at the same time per call, `1` to `20`. |
 | `timeout` | `3000` | Milliseconds a request may wait for response headers, and for more body data once it has started. Not a limit on the whole download. Enforced on a coarse timer, so expect about half a second of slack. |
 | `maximumResponseSize` | `52428800` (50 MiB) | Largest accepted document in bytes, checked while downloading and again after decompression. Larger responses are rejected. |
+| `includeEntries` | `false` | Add `entries` to the result: each page with its `lastmod`, `changefreq`, `priority` and `alternates`. Off by default to keep results small; `stream()` always yields entries. |
 | `proxy` | none | URL of an HTTP(S) proxy, e.g. `https://user:pass@proxy.host:3000`. As in 2.x, TLS certificates are not verified on the proxy connection. |
 
 ## How it behaves
@@ -120,7 +121,7 @@ The constructor, option names, `run`, `fromBuffer` and the `{ type, urls, errors
 - Content types are matched exactly (a `text/xml; charset=utf-8` header is fine; a header that merely contains `text/xml` is not).
 - Invalid options throw `TypeError` instead of a `ZodError`.
 - Pages and sitemaps seen more than once are skipped.
-- Results gain `entries`; documents larger than 50 MiB are rejected unless you raise `maximumResponseSize`.
+- Results can include `entries` with the `includeEntries` option; documents larger than 50 MiB are rejected unless you raise `maximumResponseSize`.
 - Parsing no longer goes through Cheerio's HTML parser. `<loc>` is read only as a child of `<url>` or `<sitemap>`.
 - Dependencies: `cheerio` and `zod` are replaced by `htmlparser2`.
 

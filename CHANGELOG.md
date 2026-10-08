@@ -25,7 +25,7 @@ README for the full list of differences.
 
 ### Added
 
-- `entries` on the result: `lastmod`, `changefreq`, `priority` and hreflang
+- `entries` on the result, behind the `includeEntries` option (default `false`): `lastmod`, `changefreq`, `priority` and hreflang
   `alternates` next to each URL.
 - `discover(site)` finds sitemaps through `robots.txt` (falling back to
   `/sitemap.xml`).

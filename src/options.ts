@@ -16,6 +16,8 @@ export interface SitemapParserConstructorOptions {
 	maximumResponseSize?: number;
 	/** Base delay in milliseconds for exponential retry backoff. Default: `250`. */
 	retryDelay?: number;
+	/** Also return `entries` (lastmod, changefreq, priority, alternates) on results. Default: `false`. */
+	includeEntries?: boolean;
 }
 
 export interface ResolvedOptions {
@@ -28,6 +30,7 @@ export interface ResolvedOptions {
 	readonly concurrency: number;
 	readonly maximumResponseSize: number;
 	readonly retryDelay: number;
+	readonly includeEntries: boolean;
 }
 
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36';
@@ -83,5 +86,6 @@ export function resolveOptions(options: SitemapParserConstructorOptions | undefi
 		concurrency: number(input, 'concurrency', 3, 1, 20, true),
 		maximumResponseSize: number(input, 'maximumResponseSize', 50 * 1024 * 1024, 1, Infinity, true),
 		retryDelay: number(input, 'retryDelay', 250, 0, Infinity, false),
+		includeEntries: boolean(input, 'includeEntries', false),
 	};
 }

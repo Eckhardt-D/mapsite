@@ -34,7 +34,7 @@ export class SitemapParser implements AsyncDisposable {
 	 */
 	async discover(site: string, options: RequestOptions = {}): Promise<MapSiteResponse> {
 		if (typeof site !== 'string' || !URL.canParse(site)) {
-			return { type: 'sitemap', urls: [], entries: [], errors: [{ url: String(site), reason: `Invalid URL: ${String(site)}` }] };
+			return { type: 'sitemap', urls: [], ...(this.#options.includeEntries && { entries: [] }), errors: [{ url: String(site), reason: `Invalid URL: ${String(site)}` }] };
 		}
 
 		const robotsUrl = new URL('/robots.txt', site);
@@ -94,14 +94,15 @@ export class SitemapParser implements AsyncDisposable {
 	}
 
 	async #collect(roots: CrawlRoot[], options: RequestOptions): Promise<MapSiteResponse> {
-		const response: MapSiteResponse = { type: 'sitemap', urls: [], entries: [], errors: [] };
+		const entries: SitemapEntry[] | undefined = this.#options.includeEntries ? [] : undefined;
+		const response: MapSiteResponse = { type: 'sitemap', urls: [], ...(entries && { entries }), errors: [] };
 
 		for await (const event of crawl(roots, this.#crawlOptions(options))) {
 			if (event.kind === 'root') {
 				if (event.type === 'index' || roots.length > 1) response.type = 'index';
 			} else if (event.kind === 'entry') {
 				response.urls.push(event.entry.url);
-				response.entries.push(event.entry);
+				entries?.push(event.entry);
 			} else {
 				response.errors.push(event.error);
 			}
