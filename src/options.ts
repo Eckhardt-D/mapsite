@@ -10,6 +10,17 @@ export interface SitemapParserConstructorOptions {
 	timeout?: number;
 	/** URL of an HTTP(S) proxy to send requests through. */
 	proxy?: string;
+	/**
+	 * `always` sends every request through `proxy`. `fallback` fetches directly
+	 * and repeats a request through `proxy` when the site answers 401, 403 or 429.
+	 * Default: `always`.
+	 */
+	proxyMode?: 'always' | 'fallback';
+	/**
+	 * Refuse direct connections to loopback, private, link-local and other
+	 * non-public addresses, including after redirects. Default: `false`.
+	 */
+	blockPrivateAddresses?: boolean;
 	/** Documents fetched at the same time, 1 to 20. Default: `3`. */
 	concurrency?: number;
 	/** Largest accepted document in bytes, before and after decompression. Default: 50 MiB. */
@@ -27,6 +38,8 @@ export interface ResolvedOptions {
 	readonly maximumDepth: number;
 	readonly timeout: number;
 	readonly proxy: string | undefined;
+	readonly proxyMode: 'always' | 'fallback';
+	readonly blockPrivateAddresses: boolean;
 	readonly concurrency: number;
 	readonly maximumResponseSize: number;
 	readonly retryDelay: number;
@@ -68,6 +81,14 @@ function proxy(input: Input): string | undefined {
 	return value;
 }
 
+function proxyMode(input: Input): 'always' | 'fallback' {
+	const value = input.proxyMode;
+	if (value === undefined) return 'always';
+	if (value !== 'always' && value !== 'fallback') invalid('proxyMode', '"always" or "fallback"');
+	if (value === 'fallback' && input.proxy === undefined) invalid('proxyMode', 'a proxy to fall back to');
+	return value;
+}
+
 export function resolveOptions(options: SitemapParserConstructorOptions | undefined): ResolvedOptions {
 	if (options !== undefined && (typeof options !== 'object' || options === null || Array.isArray(options))) {
 		throw new TypeError('Options must be an object.');
@@ -83,6 +104,8 @@ export function resolveOptions(options: SitemapParserConstructorOptions | undefi
 		maximumDepth: number(input, 'maximumDepth', 2, 1, 10, true),
 		timeout: number(input, 'timeout', 3000, 1, Infinity, false),
 		proxy: proxy(input),
+		proxyMode: proxyMode(input),
+		blockPrivateAddresses: boolean(input, 'blockPrivateAddresses', false),
 		concurrency: number(input, 'concurrency', 3, 1, 20, true),
 		maximumResponseSize: number(input, 'maximumResponseSize', 50 * 1024 * 1024, 1, Infinity, true),
 		retryDelay: number(input, 'retryDelay', 250, 0, Infinity, false),

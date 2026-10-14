@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0 (unreleased)
+## 3.0.0 (2026-10-14)
 
 The constructor, option names, `run`, `fromBuffer` and the `{ type, urls, errors }`
 result are unchanged. The internals were rewritten; see "Upgrading from 2.x" in the
@@ -9,7 +9,14 @@ README for the full list of differences.
 ### Fixed
 
 - Works on Bun: redirects are followed internally instead of via `Dispatcher.compose`.
+- `proxy` works on Bun, whose built-in `undici` ignored `ProxyAgent` and sent
+  requests directly; proxied requests now use Bun's `fetch` `proxy` option.
 - A `Content-Type` header with several comma-joined values is accepted if any is allowed.
+
+### Known limitations
+
+- On Bun, `timeout` is not enforced and `close()` does not close connections:
+  Bun's built-in `undici` ignores them.
 
 ### Breaking
 
@@ -41,6 +48,10 @@ README for the full list of differences.
 - Redirects are followed, and gzip is detected from the data rather than the
   content type.
 - Options `concurrency`, `maximumResponseSize` and `retryDelay`.
+- `proxyMode: 'fallback'`: fetch directly and only use the proxy for sites that
+  answer 401, 403 or 429.
+- `blockPrivateAddresses`: refuse direct connections to non-public addresses,
+  including through redirects and DNS, for crawling user-supplied URLs.
 - ESM and CommonJS builds with an `exports` map.
 
 ### Changed
