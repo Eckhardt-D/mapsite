@@ -4,6 +4,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import type { Readable } from 'node:stream';
 import { Agent, ProxyAgent, request, type Dispatcher } from 'undici';
 import { assertPublicHost, guardedConnector } from './address';
+import { bunProxyRequest, isBun } from './bun';
 import type { ResolvedOptions } from './options';
 
 const gunzipAsync = promisify(gunzip);
@@ -221,13 +222,15 @@ export class HttpClient {
 			// undici shim ignores custom connectors (Bun) are still covered, except
 			// for a DNS answer that changes between this check and the connection.
 			if (blockPrivateAddresses && !proxied) await assertPublicHost(url.hostname);
-			const response = await request(url, {
-				dispatcher: proxied ? this.#proxied! : this.#direct!,
-				headers,
-				signal,
-				headersTimeout: timeout,
-				bodyTimeout: timeout,
-			});
+			const response = proxied && isBun
+				? await bunProxyRequest(url, headers, this.#options.proxy!, signal)
+				: await request(url, {
+					dispatcher: proxied ? this.#proxied! : this.#direct!,
+					headers,
+					signal,
+					headersTimeout: timeout,
+					bodyTimeout: timeout,
+				});
 
 			const location = response.headers['location'];
 			if (!REDIRECT_STATUSES.has(response.statusCode) || typeof location !== 'string') return response;

@@ -9,6 +9,8 @@ README for the full list of differences.
 ### Fixed
 
 - Works on Bun: redirects are followed internally instead of via `Dispatcher.compose`.
+- `proxy` works on Bun, whose built-in `undici` ignored `ProxyAgent` and sent
+  requests directly; proxied requests now use Bun's `fetch` `proxy` option.
 - A `Content-Type` header with several comma-joined values is accepted if any is allowed.
 
 ### Breaking
