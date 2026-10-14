@@ -265,6 +265,99 @@ describe('proxy', () => {
 	});
 });
 
+const viaProxy = (site: { requests: { headers: Record<string, unknown> }[] }) =>
+	site.requests.map(request => request.headers.via !== undefined);
+
+async function startProxy() {
+	const proxy = await listen(createProxy(createServer()));
+	let requests = 0;
+	proxy.server.on('request', () => { requests++; });
+	proxy.server.on('connect', () => { requests++; });
+	return { url: proxy.url, requests: () => requests };
+}
+
+describe('proxy fallback', () => {
+	it.each([401, 403, 429])('repeats a request answered with %i through the proxy', async status => {
+		const site = await serve({ '/s': ({ hit }) => hit === 1 ? { status } : xml(SITEMAP) });
+		const proxy = await startProxy();
+		const result = await createParser({ proxy: proxy.url, proxyMode: 'fallback', maximumRetries: 0 }).run(`${site.url}/s`);
+		expect(result.urls).toEqual(PAGES);
+		expect(result.errors).toEqual([]);
+		expect(viaProxy(site)).toEqual([false, true]);
+	});
+
+	it('fetches directly when the site answers', async () => {
+		const site = await serve({ '/s': xml(SITEMAP) });
+		const proxy = await startProxy();
+		const result = await createParser({ proxy: proxy.url, proxyMode: 'fallback' }).run(`${site.url}/s`);
+		expect(result.urls).toEqual(PAGES);
+		expect(viaProxy(site)).toEqual([false]);
+		expect(proxy.requests()).toBe(0);
+	});
+
+	it.each([404, 500])('does not use the proxy for %i', async status => {
+		const site = await serve({ '/s': { status } });
+		const proxy = await startProxy();
+		const result = await createParser({ proxy: proxy.url, proxyMode: 'fallback' }).run(`${site.url}/s`);
+		expect(result.errors).toHaveLength(1);
+		expect(proxy.requests()).toBe(0);
+	});
+
+	it('reports the proxied failure when the proxy is refused too', async () => {
+		const site = await serve({ '/s': { status: 403 } });
+		const proxy = await startProxy();
+		const result = await createParser({ proxy: proxy.url, proxyMode: 'fallback' }).run(`${site.url}/s`);
+		expect(result.errors).toEqual([{ url: `${site.url}/s`, reason: 'Unexpected response status (403)' }]);
+		expect(viaProxy(site)).toEqual([false, true]);
+	});
+
+	it('sends later requests to a refusing origin straight through the proxy', async () => {
+		const site = await serve({
+			'/index': ({ base, hit }) => hit === 1 ? { status: 403 } : xml(sitemapIndex(`${base}/a`, `${base}/b`)),
+			'/a': xml(urlset('https://example.com/a')),
+			'/b': xml(urlset('https://example.com/b')),
+		});
+		const proxy = await startProxy();
+		const result = await createParser({ proxy: proxy.url, proxyMode: 'fallback' }).run(`${site.url}/index`);
+		expect(result.urls).toEqual(['https://example.com/a', 'https://example.com/b']);
+		expect(viaProxy(site)).toEqual([false, true, true, true]);
+	});
+});
+
+describe('blockPrivateAddresses', () => {
+	it('refuses IP literals without retrying', async () => {
+		const site = await serve({ '/s': xml(SITEMAP) });
+		// A retry would wait out the delay and time the test out.
+		const parser = createParser({ blockPrivateAddresses: true, maximumRetries: 3, retryDelay: 60_000 });
+		const result = await parser.run(`${site.url}/s`);
+		expect(result.urls).toEqual([]);
+		expect(result.errors).toEqual([{ url: `${site.url}/s`, reason: 'Refusing to connect to 127.0.0.1: not a public address.' }]);
+		expect(site.hits('/s')).toBe(0);
+	});
+
+	it('refuses hostnames that resolve to a private address', async () => {
+		const site = await serve({ '/s': xml(SITEMAP) });
+		const url = site.url.replace('127.0.0.1', 'localhost');
+		const result = await createParser({ blockPrivateAddresses: true }).run(`${url}/s`);
+		expect(result.errors).toHaveLength(1);
+		expect(result.errors[0].reason).toMatch(/^Refusing to connect to (127\.0\.0\.1|::1): not a public address\.$/);
+		expect(site.hits('/s')).toBe(0);
+	});
+
+	it('does not fall back to the proxy for a refused address', async () => {
+		const site = await serve({ '/s': xml(SITEMAP) });
+		const proxy = await startProxy();
+		const result = await createParser({ blockPrivateAddresses: true, proxy: proxy.url, proxyMode: 'fallback' }).run(`${site.url}/s`);
+		expect(result.errors).toHaveLength(1);
+		expect(proxy.requests()).toBe(0);
+	});
+
+	it('is off by default', async () => {
+		const site = await serve({ '/s': xml(SITEMAP) });
+		expect((await createParser().run(`${site.url}/s`)).urls).toEqual(PAGES);
+	});
+});
+
 describe('close', () => {
 	it('can be called more than once, including through Symbol.asyncDispose', async () => {
 		const site = await serve({ '/s': xml(SITEMAP) });

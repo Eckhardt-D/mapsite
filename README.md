@@ -102,6 +102,8 @@ All options are optional. Invalid values throw a `TypeError` naming the option; 
 | `maximumResponseSize` | `52428800` (50 MiB) | Largest accepted document in bytes, checked while downloading and again after decompression. Larger responses are rejected. |
 | `includeEntries` | `false` | Add `entries` to the result: each page with its `lastmod`, `changefreq`, `priority` and `alternates`. Off by default to keep results small; `stream()` always yields entries. |
 | `proxy` | none | URL of an HTTP(S) proxy, e.g. `https://user:pass@proxy.host:3000`. As in 2.x, TLS certificates are not verified on the proxy connection. |
+| `proxyMode` | `always` | `always` sends every request through `proxy`. `fallback` fetches directly first and sends a request again through `proxy` when the site answers 401, 403 or 429; later requests to that origin go through the proxy straight away. Requires `proxy`. |
+| `blockPrivateAddresses` | `false` | Refuse to connect to loopback, private, link-local, shared, reserved and multicast addresses, IPv4 and IPv6. Checked on every connection, so redirects and hostnames that resolve to such addresses are refused too. Applies to direct connections only: through a proxy, the proxy resolves the target. Turn it on when the URLs come from untrusted users. On Bun, whose undici shim ignores custom connectors, addresses are checked before each request instead, so a DNS answer that changes between that check and the connection is not caught. |
 
 ## How it behaves
 
@@ -110,6 +112,7 @@ All options are optional. Invalid values throw a `TypeError` naming the option; 
 - **Credentials in the URL** (`https://user:pass@host/sitemap.xml`) are sent as Basic Auth, and removed from the request URL.
 - **Order and duplicates:** pages come back in document order, whichever request finishes first. A sitemap linked twice (or an index linking to itself) is fetched once, and a page listed in several sitemaps is reported once.
 - **Only `http:` and `https:`** URLs are fetched.
+- **Untrusted URLs:** with `blockPrivateAddresses`, a sitemap URL (or a redirect, or an index entry) cannot make the parser reach `localhost`, your private network or a cloud metadata endpoint. A refused address is reported in `errors` and never retried, nor sent through the proxy.
 
 ## Upgrading from 2.x
 

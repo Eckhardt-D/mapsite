@@ -26,6 +26,8 @@ describe('options', () => {
 			maximumDepth: 10,
 			timeout: 500,
 			proxy: 'http://proxy.example:3128',
+			proxyMode: 'fallback',
+			blockPrivateAddresses: true,
 			concurrency: 20,
 			maximumResponseSize: 1024,
 			retryDelay: 0,
@@ -55,6 +57,9 @@ describe('options', () => {
 		['includeEntries', 'yes'],
 		['proxy', 'not a url'],
 		['proxy', 'ftp://proxy.example'],
+		['proxyMode', 'sometimes'],
+		['proxyMode', 'fallback'],
+		['blockPrivateAddresses', 'yes'],
 	])('rejects %s = %j, naming the option', (name, value) => {
 		expect(() => new SitemapParser({ [name]: value } as SitemapParserConstructorOptions))
 			.toThrow(new RegExp(`"${name}"`));

@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { Readable } from 'node:stream';
 import { Agent, ProxyAgent, request, type Dispatcher } from 'undici';
+import { assertPublicHost, guardedConnector } from './address';
 import type { ResolvedOptions } from './options';
 
 const gunzipAsync = promisify(gunzip);
@@ -10,6 +11,12 @@ const gunzipAsync = promisify(gunzip);
 const MAXIMUM_REDIRECTS = 5;
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 const MAXIMUM_BACKOFF = 10_000;
+
+// Statuses that, with `proxyMode: 'fallback'`, send the request again through the proxy.
+const FALLBACK_STATUSES = new Set([401, 403, 429]);
+
+// Origins remembered as refusing direct requests, per parser.
+const MAXIMUM_REMEMBERED_ORIGINS = 1000;
 
 const ACCEPT = 'text/xml, application/xml, application/rss+xml, application/atom+xml, text/plain, application/gzip';
 
@@ -29,8 +36,8 @@ const ALLOWED_CONTENT_TYPES = new Set([
 // Plain downloads of *.xml.gz are often served as a generic binary type.
 const GENERIC_BINARY = 'application/octet-stream';
 
-// undici errors that retrying cannot fix, such as a redirect loop.
-const PERMANENT_UNDICI_ERRORS = new Set(['UND_ERR_INVALID_ARG', 'UND_ERR_ABORTED']);
+// Errors that retrying cannot fix, such as a redirect loop or a blocked address.
+const PERMANENT_ERRORS = new Set(['UND_ERR_INVALID_ARG', 'UND_ERR_ABORTED', 'ERR_MAPSITE_BLOCKED_ADDRESS']);
 
 export class FetchError extends Error {
 	constructor(message: string, readonly retryable = false, readonly statusCode?: number) {
@@ -80,44 +87,71 @@ function isRetryable(error: unknown): boolean {
 	if (isAbort(error)) return false;
 	if (error instanceof FetchError) return error.retryable;
 	const code = (error as { code?: unknown }).code;
-	return !(typeof code === 'string' && PERMANENT_UNDICI_ERRORS.has(code));
+	return !(typeof code === 'string' && PERMANENT_ERRORS.has(code));
 }
+
+const isRefusal = (error: unknown) =>
+	error instanceof FetchError && error.statusCode !== undefined && FALLBACK_STATUSES.has(error.statusCode);
 
 export class HttpClient {
 	readonly #options: ResolvedOptions;
-	readonly #dispatcher: Dispatcher;
+	/** Direct connections; absent when every request goes through the proxy. */
+	readonly #direct: Dispatcher | undefined;
+	readonly #proxied: Dispatcher | undefined;
+	/** Origins that refused a direct request; later requests to them use the proxy straight away. */
+	readonly #refusingOrigins = new Set<string>();
 	#closing: Promise<void> | undefined;
 
 	constructor(options: ResolvedOptions) {
 		this.#options = options;
 		// Redirects are followed in #request rather than via `Dispatcher.compose`,
 		// which runtimes with their own undici shim (Bun) do not implement.
-		this.#dispatcher = options.proxy === undefined
-			? new Agent()
-			: new ProxyAgent({ uri: options.proxy, connect: { rejectUnauthorized: false } });
+		if (options.proxy === undefined || options.proxyMode === 'fallback') {
+			this.#direct = new Agent(options.blockPrivateAddresses ? { connect: guardedConnector() } : {});
+		}
+		if (options.proxy !== undefined) {
+			this.#proxied = new ProxyAgent({ uri: options.proxy, connect: { rejectUnauthorized: false } });
+		}
 	}
 
 	/**
 	 * Downloads a sitemap and returns its bytes, gunzipped if necessary.
 	 * Retries transient failures (network errors, 408, 425, 429, 5xx) with
-	 * exponential backoff; anything else fails immediately.
+	 * exponential backoff; anything else fails immediately. In fallback mode a
+	 * direct request answered with 401, 403 or 429 is sent again through the
+	 * proxy, which does not count as a retry.
 	 */
 	async fetch(rawUrl: string, signal?: AbortSignal): Promise<Buffer> {
 		const { url, headers } = this.#prepare(rawUrl);
+		let proxied = this.#direct === undefined || this.#refusingOrigins.has(url.origin);
 
-		for (let attempt = 0; ; attempt++) {
+		for (let retries = 0; ;) {
 			try {
-				return await this.#attempt(url, headers, signal);
+				return await this.#attempt(url, headers, proxied, signal);
 			} catch (error) {
-				if (attempt >= this.#options.maximumRetries || !isRetryable(error)) throw error;
-				await sleep(this.#backoff(attempt), undefined, { signal });
+				if (!proxied && this.#proxied !== undefined && isRefusal(error)) {
+					this.#rememberRefusal(url.origin);
+					proxied = true;
+					continue;
+				}
+				if (retries >= this.#options.maximumRetries || !isRetryable(error)) throw error;
+				await sleep(this.#backoff(retries++), undefined, { signal });
 			}
 		}
 	}
 
 	close(): Promise<void> {
 		// Bun's undici shim has no `close`; its connections are released on their own.
-		return this.#closing ??= Promise.resolve(this.#dispatcher.close?.()).then(() => undefined);
+		const dispatchers = [this.#direct, this.#proxied].filter(dispatcher => dispatcher !== undefined);
+		return this.#closing ??= Promise.all(dispatchers.map(dispatcher => dispatcher.close?.())).then(() => undefined);
+	}
+
+	#rememberRefusal(origin: string) {
+		this.#refusingOrigins.delete(origin);
+		this.#refusingOrigins.add(origin);
+		if (this.#refusingOrigins.size > MAXIMUM_REMEMBERED_ORIGINS) {
+			this.#refusingOrigins.delete(this.#refusingOrigins.values().next().value!);
+		}
 	}
 
 	#prepare(rawUrl: string) {
@@ -142,9 +176,9 @@ export class HttpClient {
 		return { url, headers };
 	}
 
-	async #attempt(url: URL, headers: Record<string, string>, signal?: AbortSignal): Promise<Buffer> {
+	async #attempt(url: URL, headers: Record<string, string>, proxied: boolean, signal?: AbortSignal): Promise<Buffer> {
 		const { maximumResponseSize: limit, rejectInvalidContentType: strict } = this.#options;
-		const response = await this.#request(url, headers, signal);
+		const response = await this.#request(url, headers, proxied, signal);
 
 		const { statusCode } = response;
 		if (statusCode < 200 || statusCode >= 300) {
@@ -178,13 +212,17 @@ export class HttpClient {
 		return inflate(bytes, limit);
 	}
 
-	async #request(url: URL, headers: Record<string, string>, signal?: AbortSignal) {
-		const { timeout } = this.#options;
+	async #request(url: URL, headers: Record<string, string>, proxied: boolean, signal?: AbortSignal) {
+		const { timeout, blockPrivateAddresses } = this.#options;
 		const visited = new Set<string>();
 		for (let redirects = 0; ; redirects++) {
 			visited.add(url.href);
+			// Checked before every hop as well as in the connector: runtimes whose
+			// undici shim ignores custom connectors (Bun) are still covered, except
+			// for a DNS answer that changes between this check and the connection.
+			if (blockPrivateAddresses && !proxied) await assertPublicHost(url.hostname);
 			const response = await request(url, {
-				dispatcher: this.#dispatcher,
+				dispatcher: proxied ? this.#proxied! : this.#direct!,
 				headers,
 				signal,
 				headersTimeout: timeout,

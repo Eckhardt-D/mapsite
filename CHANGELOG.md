@@ -41,6 +41,10 @@ README for the full list of differences.
 - Redirects are followed, and gzip is detected from the data rather than the
   content type.
 - Options `concurrency`, `maximumResponseSize` and `retryDelay`.
+- `proxyMode: 'fallback'`: fetch directly and only use the proxy for sites that
+  answer 401, 403 or 429.
+- `blockPrivateAddresses`: refuse direct connections to non-public addresses,
+  including through redirects and DNS, for crawling user-supplied URLs.
 - ESM and CommonJS builds with an `exports` map.
 
 ### Changed
