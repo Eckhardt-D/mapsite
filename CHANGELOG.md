@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0 (unreleased)
+## 3.0.0 (2026-10-14)
 
 The constructor, option names, `run`, `fromBuffer` and the `{ type, urls, errors }`
 result are unchanged. The internals were rewritten; see "Upgrading from 2.x" in the
@@ -12,6 +12,11 @@ README for the full list of differences.
 - `proxy` works on Bun, whose built-in `undici` ignored `ProxyAgent` and sent
   requests directly; proxied requests now use Bun's `fetch` `proxy` option.
 - A `Content-Type` header with several comma-joined values is accepted if any is allowed.
+
+### Known limitations
+
+- On Bun, `timeout` is not enforced and `close()` does not close connections:
+  Bun's built-in `undici` ignores them.
 
 ### Breaking
 
